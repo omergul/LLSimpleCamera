@@ -15,8 +15,10 @@ typedef enum : NSUInteger {
 } CameraPosition;
 
 typedef enum : NSUInteger {
-    CameraFlashOn,
-    CameraFlashOff
+    // The default state has to be off
+    // FIXES: Unresposive first touch to toggle flash.
+    CameraFlashOff,
+    CameraFlashOn
 } CameraFlash;
 
 typedef enum : NSUInteger {
