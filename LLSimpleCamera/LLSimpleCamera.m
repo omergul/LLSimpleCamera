@@ -126,10 +126,15 @@
 
 // stop the camera, otherwise it will lead to memory crashes
 - (void)stop {
-    AVCaptureInput* input = [self.session.inputs objectAtIndex:0];
-    [self.session removeInput:input];
-    AVCaptureVideoDataOutput* output = [self.session.outputs objectAtIndex:0];
-    [self.session removeOutput:output];
+    if(self.session.inputs.count > 0) {
+        AVCaptureInput* input = [self.session.inputs objectAtIndex:0];
+        [self.session removeInput:input];
+    }
+    if(self.session.outputs.count > 0) {
+        AVCaptureVideoDataOutput* output = [self.session.outputs objectAtIndex:0];
+        [self.session removeOutput:output];
+    }
+    
     [self.session stopRunning];
 }
 
