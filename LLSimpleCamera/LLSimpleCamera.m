@@ -15,12 +15,11 @@
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
-@property (strong, nonatomic) AVCaptureDevice *captureDevice;
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @end
 
 @implementation LLSimpleCamera
-@synthesize captureDevice = _captureDevice;
+//@synthesize captureDevice = _captureDevice;
 
 - (instancetype)initWithQuality:(CameraQuality)quality {
     self = [super initWithNibName:nil bundle:nil];
@@ -91,30 +90,46 @@
         [self.preview.layer addSublayer:captureVideoPreviewLayer];
         
         self.captureVideoPreviewLayer = captureVideoPreviewLayer;
-        
-        _captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-        
-        NSError *error = nil;
-        AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:self.captureDevice error:&error];
-
-        if (!input) {
-            // Handle the error appropriately.
-            NSLog(@"ERROR: trying to open camera: %@", error);
-            return;
-        }
-        [self.session addInput:input];
-        
-        self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-        NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
-        [self.stillImageOutput setOutputSettings:outputSettings];
-        [self.session addOutput:self.stillImageOutput];
     }
     
+    // init default device
+    AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    [self changeCameraDevice:captureDevice];
+    
+    // output settings
+    self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+    NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+    [self.stillImageOutput setOutputSettings:outputSettings];
+    [self.session addOutput:self.stillImageOutput];
+    
+    // run
     [self.session startRunning];
 }
 
-// stop session
+- (void)changeCameraDevice:(AVCaptureDevice *)captureDevice {
+    NSError *error = nil;
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
+    
+    if (!input) {
+        // Handle the error appropriately.
+        NSLog(@"ERROR: trying to open camera: %@", error);
+        return;
+    }
+    [self.session addInput:input];
+    
+    if(self.delegate) {
+        if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
+            [self.delegate cameraViewController:self didChangeDevice:captureDevice];
+        }
+    }
+}
+
+// stop the camera, otherwise it will lead to memory crashes
 - (void)stop {
+    AVCaptureInput* input = [self.session.inputs objectAtIndex:0];
+    [self.session removeInput:input];
+    AVCaptureVideoDataOutput* output = [self.session.outputs objectAtIndex:0];
+    [self.session removeOutput:output];
     [self.session stopRunning];
 }
 
@@ -168,16 +183,6 @@
      }];
 }
 
-- (void)setCaptureDevice:(AVCaptureDevice *)captureDevice {
-    _captureDevice = captureDevice;
-    
-    if(self.delegate) {
-        if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
-            [self.delegate cameraViewController:self didChangeDevice:captureDevice];
-        }
-    }
-}
-
 - (BOOL)isFlashAvailable {
     AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
     AVCaptureDeviceInput *deviceInput = (AVCaptureDeviceInput *)currentCameraInput;
@@ -208,7 +213,7 @@
     
     [deviceInput.device unlockForConfiguration];
     
-    //Commit all the configuration changes at once
+    // commit all the configuration changes at once
     [self.session commitConfiguration];
 }
 
@@ -240,36 +245,31 @@
         return;
     }
     
-    //Indicate that some changes will be made to the session
     [self.session beginConfiguration];
     
-    //Remove existing input
+    // remove existing input
     AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
     [self.session removeInput:currentCameraInput];
     
-    //Get new input
-    AVCaptureDevice *newCamera = nil;
+    // get the new input
+    AVCaptureDevice *newCaptureDevice = nil;
     if(((AVCaptureDeviceInput*)currentCameraInput).device.position == AVCaptureDevicePositionBack) {
-        newCamera = [self cameraWithPosition:AVCaptureDevicePositionFront];
+        newCaptureDevice = [self cameraWithPosition:AVCaptureDevicePositionFront];
     }
     else {
-        newCamera = [self cameraWithPosition:AVCaptureDevicePositionBack];
+        newCaptureDevice = [self cameraWithPosition:AVCaptureDevicePositionBack];
     }
     
-    if(!newCamera) {
+    if(!newCaptureDevice) {
         return;
     }
     
     _cameraPosition = cameraPosition;
     
-    // add input to session
-    AVCaptureDeviceInput *newVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:newCamera error:nil];
-    [self.session addInput:newVideoInput];
+    [self changeCameraDevice:newCaptureDevice];
     
     // commit changes
     [self.session commitConfiguration];
-    
-    self.captureDevice = newCamera;
 }
 
 
