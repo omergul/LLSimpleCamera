@@ -81,6 +81,13 @@
     [self.camera start];
 }
 
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+
+    // stop the camera
+    [self.camera stop];
+}
+
 /* camera buttons */
 - (void)switchButtonPressed:(UIButton *)button {
     [self.camera togglePosition];
