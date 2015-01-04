@@ -107,8 +107,10 @@
 - (void)cameraViewController:(LLSimpleCamera *)cameraVC didCaptureImage:(UIImage *)image {
     
     // we should stop the camera, since we don't need it anymore. We will open a new vc.
+    // this very important, otherwise you may experience memory crashes
     [self.camera stop];
     
+    // show the image
     ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
     [self presentViewController:imageVC animated:NO completion:nil];
 }
