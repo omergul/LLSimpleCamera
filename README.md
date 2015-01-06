@@ -8,7 +8,7 @@ LLSimpleCamera is a library for creating a customized camera screens similar to 
 * lets you easily capture photos
 * handles the position and flash of the camera
 * hides the nitty gritty details from the developer
-* don't have to be presented in a new modal view controller, simply can be embedded any of your VCs. (like Snapchat)
+* doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
 ### Version 1.1.1
 - fixed a potential crash scenario if -stop() is called multiple times
@@ -65,11 +65,11 @@ and here are the example delegates:
 
 ## Adding the camera controls
 
-You have to add your own camera controls (flash, camera switch etc). Simply add the controls to the view that the camera is attached to. You can see a full camera example in the example project. Download and try it on your device.
+You have to add your own camera controls (flash, camera switch etc). Simply add the controls to the view where LLSimpleCamera is attached to. You can see a full camera example in the example project. Download and try it on your device.
 
 ## Stopping and restarting the camera
 
-You should never forget to stop the camera either after the **didCaptureImage** delegate is triggered, or inside somewhere **-viewWillDisappear** of the parent controller to make sure your app doesn't try to use the camera when it is not needed. You can call **-start()** again to use the camera. So it may be good idea to to place **-start()** inside **-viewWillAppear** or some other method where you think it's good to start using the camera input.
+You should never forget to stop the camera either after the **didCaptureImage** delegate is triggered, or inside somewhere **-viewWillDisappear** of the parent controller to make sure that the app doesn't use the camera when it is not needed. You can call **-start()** to use the camera. So it may be good idea to to place **-start()** inside **-viewWillAppear** or in another relevant method.
 
 ## Contact
 
