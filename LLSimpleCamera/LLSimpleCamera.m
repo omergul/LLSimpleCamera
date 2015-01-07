@@ -15,11 +15,13 @@
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
+@property (strong, nonatomic) AVCaptureDevice *captureDevice;
+@property (strong, nonatomic) AVCaptureDeviceInput *deviceInput;
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @end
 
 @implementation LLSimpleCamera
-//@synthesize captureDevice = _captureDevice;
+@synthesize captureDevice = _captureDevice;
 
 - (instancetype)initWithQuality:(CameraQuality)quality {
     self = [super initWithNibName:nil bundle:nil];
@@ -27,7 +29,7 @@
         self.cameraQuality = quality;
         self.fixOrientationAfterCapture = NO;
     }
-
+    
     return self;
 }
 
@@ -56,7 +58,7 @@
 - (void)start {
     
     if(!_session) {
-    
+        
         self.session = [[AVCaptureSession alloc] init];
         
         NSString *sessionPreset = nil;
@@ -90,51 +92,30 @@
         [self.preview.layer addSublayer:captureVideoPreviewLayer];
         
         self.captureVideoPreviewLayer = captureVideoPreviewLayer;
+        
+        _captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        
+        NSError *error = nil;
+        _deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:self.captureDevice error:&error];
+        
+        if (!_deviceInput) {
+            // Handle the error appropriately.
+            NSLog(@"ERROR: trying to open camera: %@", error);
+            return;
+        }
+        [self.session addInput:_deviceInput];
+        
+        self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+        NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+        [self.stillImageOutput setOutputSettings:outputSettings];
+        [self.session addOutput:self.stillImageOutput];
     }
     
-    // init default device
-    AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-    [self changeCameraDevice:captureDevice];
-    
-    // output settings
-    self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-    NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
-    [self.stillImageOutput setOutputSettings:outputSettings];
-    [self.session addOutput:self.stillImageOutput];
-    
-    // run
     [self.session startRunning];
 }
 
-- (void)changeCameraDevice:(AVCaptureDevice *)captureDevice {
-    NSError *error = nil;
-    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
-    
-    if (!input) {
-        // Handle the error appropriately.
-        NSLog(@"ERROR: trying to open camera: %@", error);
-        return;
-    }
-    [self.session addInput:input];
-    
-    if(self.delegate) {
-        if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
-            [self.delegate cameraViewController:self didChangeDevice:captureDevice];
-        }
-    }
-}
-
-// stop the camera, otherwise it will lead to memory crashes
+// stop session
 - (void)stop {
-    if(self.session.inputs.count > 0) {
-        AVCaptureInput* input = [self.session.inputs objectAtIndex:0];
-        [self.session removeInput:input];
-    }
-    if(self.session.outputs.count > 0) {
-        AVCaptureVideoDataOutput* output = [self.session.outputs objectAtIndex:0];
-        [self.session removeOutput:output];
-    }
-    
     [self.session stopRunning];
 }
 
@@ -188,6 +169,16 @@
      }];
 }
 
+- (void)setCaptureDevice:(AVCaptureDevice *)captureDevice {
+    _captureDevice = captureDevice;
+    
+    if(self.delegate) {
+        if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
+            [self.delegate cameraViewController:self didChangeDevice:captureDevice];
+        }
+    }
+}
+
 - (BOOL)isFlashAvailable {
     AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
     AVCaptureDeviceInput *deviceInput = (AVCaptureDeviceInput *)currentCameraInput;
@@ -218,7 +209,7 @@
     
     [deviceInput.device unlockForConfiguration];
     
-    // commit all the configuration changes at once
+    //Commit all the configuration changes at once
     [self.session commitConfiguration];
 }
 
@@ -250,31 +241,36 @@
         return;
     }
     
+    //Indicate that some changes will be made to the session
     [self.session beginConfiguration];
     
-    // remove existing input
+    //Remove existing input
     AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
     [self.session removeInput:currentCameraInput];
     
-    // get the new input
-    AVCaptureDevice *newCaptureDevice = nil;
+    //Get new input
+    AVCaptureDevice *newCamera = nil;
     if(((AVCaptureDeviceInput*)currentCameraInput).device.position == AVCaptureDevicePositionBack) {
-        newCaptureDevice = [self cameraWithPosition:AVCaptureDevicePositionFront];
+        newCamera = [self cameraWithPosition:AVCaptureDevicePositionFront];
     }
     else {
-        newCaptureDevice = [self cameraWithPosition:AVCaptureDevicePositionBack];
+        newCamera = [self cameraWithPosition:AVCaptureDevicePositionBack];
     }
     
-    if(!newCaptureDevice) {
+    if(!newCamera) {
         return;
     }
     
     _cameraPosition = cameraPosition;
     
-    [self changeCameraDevice:newCaptureDevice];
+    // add input to session
+    AVCaptureDeviceInput *newVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:newCamera error:nil];
+    [self.session addInput:newVideoInput];
     
     // commit changes
     [self.session commitConfiguration];
+    
+    self.captureDevice = newCamera;
 }
 
 
@@ -288,6 +284,38 @@
     return nil;
 }
 
+- (void) focusAtPoint:(CGPoint)point
+{
+    NSLog(@"Focusing at point %f %F", point.x, point.y);
+    AVCaptureDevice *device = _deviceInput.device;
+    if ( device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus] ) {
+        NSError *error;
+        if ( [device lockForConfiguration:&error] ) {
+            device.focusPointOfInterest = point;
+            device.focusMode = AVCaptureFocusModeAutoFocus;
+            [device unlockForConfiguration];
+        }
+    }
+    
+    //Add focus box to view
+    CALayer *focusBox = [[CALayer alloc] init];
+    [focusBox setCornerRadius:5.0f];
+    [focusBox setBounds:CGRectMake(0.0f, 0.0f, 70, 60)];
+    [focusBox setBorderWidth:3.0f];
+    [focusBox setBorderColor:[[UIColor yellowColor] CGColor]];
+    [focusBox setOpacity:0];
+    [focusBox setPosition:point];
+    
+    CABasicAnimation *focusBoxAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    focusBoxAnimation.duration = 0.75;
+    focusBoxAnimation.autoreverses = NO;
+    focusBoxAnimation.repeatCount = 0.0;
+    focusBoxAnimation.fromValue = [NSNumber numberWithFloat:1.0];
+    focusBoxAnimation.toValue = [NSNumber numberWithFloat:0.0];
+    [focusBox addAnimation:focusBoxAnimation forKey:@"animateOpacity"];
+    [self.view.layer addSublayer:focusBox];
+}
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 }
@@ -299,7 +327,7 @@
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
     
-//    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
+    //    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
     
     self.preview.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
     
@@ -331,6 +359,5 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 
 @end
