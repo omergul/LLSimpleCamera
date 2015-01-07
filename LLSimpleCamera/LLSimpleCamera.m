@@ -15,6 +15,7 @@
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
+@property (strong, nonatomic) AVCaptureDeviceInput *deviceInput;
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @end
 
@@ -108,14 +109,14 @@
 
 - (void)changeCameraDevice:(AVCaptureDevice *)captureDevice {
     NSError *error = nil;
-    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
+    _deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
     
-    if (!input) {
+    if (!_deviceInput) {
         // Handle the error appropriately.
         NSLog(@"ERROR: trying to open camera: %@", error);
         return;
     }
-    [self.session addInput:input];
+    [self.session addInput:_deviceInput];
     
     if(self.delegate) {
         if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
@@ -286,6 +287,37 @@
         if ([device position] == position) return device;
     }
     return nil;
+}
+
+- (void) focusAtPoint:(CGPoint)point
+{
+    AVCaptureDevice *device = _deviceInput.device;
+    if ( device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus] ) {
+        NSError *error;
+        if ( [device lockForConfiguration:&error] ) {
+            device.focusPointOfInterest = point;
+            device.focusMode = AVCaptureFocusModeAutoFocus;
+            [device unlockForConfiguration];
+        }
+    }
+    
+    //Add focus box to view
+    CALayer *focusBox = [[CALayer alloc] init];
+    [focusBox setCornerRadius:5.0f];
+    [focusBox setBounds:CGRectMake(0.0f, 0.0f, 70, 60)];
+    [focusBox setBorderWidth:3.0f];
+    [focusBox setBorderColor:[[UIColor yellowColor] CGColor]];
+    [focusBox setOpacity:0];
+    [focusBox setPosition:point];
+    
+    CABasicAnimation *focusBoxAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    focusBoxAnimation.duration = 0.75;
+    focusBoxAnimation.autoreverses = NO;
+    focusBoxAnimation.repeatCount = 0.0;
+    focusBoxAnimation.fromValue = [NSNumber numberWithFloat:1.0];
+    focusBoxAnimation.toValue = [NSNumber numberWithFloat:0.0];
+    [focusBox addAnimation:focusBoxAnimation forKey:@"animateOpacity"];
+    [self.view.layer addSublayer:focusBox];
 }
 
 - (void)viewWillAppear:(BOOL)animated {

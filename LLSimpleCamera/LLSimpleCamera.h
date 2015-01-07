@@ -91,6 +91,9 @@ The LLSimpleCameraDelegate delegate.
  */
 - (BOOL)isFlashAvailable;
 
+//Add tap to focus at point
+- (void) focusAtPoint: (CGPoint) point;
+
 /**
  Capture the image.
  */
