@@ -15,7 +15,6 @@
 @property (strong, nonatomic) UIButton *snapButton;
 @property (strong, nonatomic) UIButton *switchButton;
 @property (strong, nonatomic) UIButton *flashButton;
-@property (strong, nonatomic) UITapGestureRecognizer *tapGesture;
 
 @end
 
@@ -74,11 +73,6 @@
     self.switchButton.imageEdgeInsets = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
     [self.switchButton addTarget:self action:@selector(switchButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.switchButton];
-    
-    self.tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(addFocusOnTouchWithGestureRecognizer:)];
-    self.tapGesture.numberOfTapsRequired = 1;
-    [self.tapGesture setDelaysTouchesEnded:NO];
-    [self.camera.view addGestureRecognizer:self.tapGesture];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -140,13 +134,6 @@
     }
     
     self.flashButton.selected = NO;
-}
-
-- (void) addFocusOnTouchWithGestureRecognizer: (UIGestureRecognizer *) gestureRecognizer
-{
-    NSLog(@"Recognized touch");
-    CGPoint touchedPoint = (CGPoint) [gestureRecognizer locationInView:self.camera.view];
-    [self.camera focusAtPoint:touchedPoint];
 }
 
 /* other lifecycle methods */

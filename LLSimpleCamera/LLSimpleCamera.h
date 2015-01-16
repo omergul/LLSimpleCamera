@@ -16,7 +16,6 @@ typedef enum : NSUInteger {
 
 typedef enum : NSUInteger {
     // The default state has to be off
-    // FIXES: Unresposive first touch to toggle flash.
     CameraFlashOff,
     CameraFlashOn
 } CameraFlash;
@@ -41,6 +40,7 @@ The LLSimpleCameraDelegate delegate.
  The status of the camera flash.
  */
 @property (nonatomic) CameraFlash cameraFlash;
+
 /**
  The position of the camera.
  */
@@ -51,6 +51,11 @@ The LLSimpleCameraDelegate delegate.
  see: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
  */
 @property (nonatomic) BOOL fixOrientationAfterCapture;
+
+/**
+ Set NO if you don't want ot enable user triggered focusing. Enabled by default.
+ */
+@property (nonatomic) BOOL tapToFocus;
 
 /**
  Returns an instance of LLSimpleCamera with the given quality.
@@ -91,8 +96,12 @@ The LLSimpleCameraDelegate delegate.
  */
 - (BOOL)isFlashAvailable;
 
-//Add tap to focus at point
-- (void) focusAtPoint: (CGPoint) point;
+/**
+ Alter the layer and the animation displayed when the user taps on screen.
+ @param layer Layer to be displayed
+ @param animation to be applied after the layer is shown
+ */
+- (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
 /**
  Capture the image.
