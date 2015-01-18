@@ -33,9 +33,14 @@ typedef enum : NSUInteger {
 @interface LLSimpleCamera : UIViewController
 
 /**
- * The LLSimpleCameraDelegate delegate.
+ * Triggered on device change.
  */
-@property (nonatomic, weak) id<LLSimpleCameraDelegate> delegate;
+@property (nonatomic, copy) void (^onDeviceChange)(LLSimpleCamera *camera, AVCaptureDevice *device);
+
+/**
+ * Triggered on any kind of error.
+ */
+@property (nonatomic, copy) void (^onError)(LLSimpleCamera *camera, NSError *error);
 
 /**
  * Camera flash mode.
@@ -75,12 +80,12 @@ typedef enum : NSUInteger {
 - (void)stop;
 
 /**
- * Attaches the LLSimpleCamera to another vs with a delegate. It basically adds the LLSimpleCamera as a
+ * Attaches the LLSimpleCamera to another view controller with a frame. It basically adds the LLSimpleCamera as a
  * child vc to the given vc.
  * @param vc A view controller.
- * @param delegate The LLSimpleCamera delegate vc.
+ * @param frame The frame of the camera.
  */
-- (void)attachToViewController:(UIViewController *)vc withDelegate:(id<LLSimpleCameraDelegate>)delegate;
+- (void)attachToViewController:(UIViewController *)vc withFrame:(CGRect)frame;
 
 /**
  Changes the posiition of the camera (either back or front) and returns the final position.
@@ -101,21 +106,8 @@ typedef enum : NSUInteger {
 
 /**
  * Capture the image.
+ * @param onCapture a block triggered after the capturing the photo.
  */
-- (void)capture;
-@end
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
 
-@protocol LLSimpleCameraDelegate <NSObject>
-/**
- * Triggered when the active camera device is changed. Programmer can use isFlashAvailable to check if the flash
- * is available and show the related icons.
- */
-- (void)cameraViewController:(LLSimpleCamera*)cameraVC
-             didChangeDevice:(AVCaptureDevice *)device;
-
-/**
- * Triggered after the image is captured by the camera.
- */
-- (void)cameraViewController:(LLSimpleCamera*)cameraVC
-             didCaptureImage:(UIImage *)image;
 @end

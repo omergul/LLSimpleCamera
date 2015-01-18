@@ -24,7 +24,6 @@
 @end
 
 @implementation LLSimpleCamera
-@synthesize captureDevice = _captureDevice;
 
 - (instancetype)initWithQuality:(CameraQuality)quality {
     self = [super initWithNibName:nil bundle:nil];
@@ -40,7 +39,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.cameraFlash = CameraFlashOff;
+    _cameraFlash = CameraFlashOff;
     
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingNone;
@@ -84,11 +83,12 @@
     self.focusBoxAnimation = animation;
 }
 
-- (void)attachToViewController:(UIViewController *)vc withDelegate:(id<LLSimpleCameraDelegate>)delegate {
-    self.delegate = delegate;
+- (void)attachToViewController:(UIViewController *)vc withFrame:(CGRect)frame {
     [vc.view addSubview:self.view];
     [vc addChildViewController:self];
     [self didMoveToParentViewController:vc];
+    
+    vc.view.frame = frame;
 }
 
 # pragma mark Touch Delegate
@@ -147,14 +147,15 @@
         
         self.captureVideoPreviewLayer = captureVideoPreviewLayer;
         
-        _captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        self.captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
         
         NSError *error = nil;
         _deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:self.captureDevice error:&error];
         
         if (!_deviceInput) {
-            // Handle the error appropriately.
-            NSLog(@"ERROR: trying to open camera: %@", error);
+            if(self.onError) {
+                self.onError(self, error);
+            }
             return;
         }
         [self.session addInput:_deviceInput];
@@ -173,31 +174,33 @@
 }
 
 
--(void)capture {
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture {
     
     AVCaptureConnection *videoConnection = [self captureConnection];
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
-         CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
-         if (exifAttachments) {
-             // Do something with the attachments.
-             //NSLog(@"attachements: %@", exifAttachments);
-         } else {
-             //NSLog(@"no attachments");
-         }
+         UIImage *image = nil;
+         NSDictionary *metadata = nil;
          
-         NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
-         UIImage *image = [[UIImage alloc] initWithData:imageData];
-         
-         if(self.fixOrientationAfterCapture) {
-             image = [image fixOrientation];
-         }
-         
-         if(self.delegate) {
-             if ([self.delegate respondsToSelector:@selector(cameraViewController:didCaptureImage:)]) {
-                 [self.delegate cameraViewController:self didCaptureImage:image];
+         // check if we got the image buffer
+         if (imageSampleBuffer != NULL) {
+             CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
+             if(exifAttachments) {
+                 metadata = (__bridge NSDictionary*)exifAttachments;
              }
+             
+             NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
+             image = [[UIImage alloc] initWithData:imageData];
+             
+             if(self.fixOrientationAfterCapture) {
+                 image = [image fixOrientation];
+             }
+         }
+         
+         // trigger the block
+         if(onCapture) {
+             onCapture(self, image, metadata, error);
          }
      }];
 }
@@ -230,18 +233,15 @@
     // reset flash
     self.cameraFlash = CameraFlashOff;
     
-    if(self.delegate) {
-        if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
-            [self.delegate cameraViewController:self didChangeDevice:captureDevice];
-        }
+    // trigger block
+    if(self.onDeviceChange) {
+        self.onDeviceChange(self, captureDevice);
     }
 }
 
 - (BOOL)isFlashAvailable {
-    AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
-    AVCaptureDeviceInput *deviceInput = (AVCaptureDeviceInput *)currentCameraInput;
     
-    return deviceInput.device.isTorchAvailable;
+    return _deviceInput.device.isTorchAvailable;
 }
 
 
@@ -324,13 +324,20 @@
         return;
     }
     
+    // add input to session
+    NSError *error = nil;
+    AVCaptureDeviceInput *newVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:newCamera error:&error];
+    if(error) {
+        if(self.onError) {
+            self.onError(self, error);
+        }
+        [self.session commitConfiguration];
+        return;
+    }
+    
     _cameraPosition = cameraPosition;
     
-    // add input to session
-    AVCaptureDeviceInput *newVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:newCamera error:nil];
     [self.session addInput:newVideoInput];
-    
-    // commit changes
     [self.session commitConfiguration];
     
     self.captureDevice = newCamera;
@@ -354,12 +361,16 @@
     //NSLog(@"Focusing at point %@", NSStringFromCGPoint(point));
     
     AVCaptureDevice *device = _deviceInput.device;
-    if ( device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus] ) {
+    if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
         NSError *error;
-        if ( [device lockForConfiguration:&error] ) {
+        if ([device lockForConfiguration:&error]) {
             device.focusPointOfInterest = point;
             device.focusMode = AVCaptureFocusModeAutoFocus;
             [device unlockForConfiguration];
+        }
+        
+        if(error && self.onError) {
+            self.onError(self, error);
         }
     }
 }
@@ -460,9 +471,7 @@
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
     
-    //    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
-    
-    NSLog(@"laying out camera!");
+//    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
     
     self.preview.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
     
