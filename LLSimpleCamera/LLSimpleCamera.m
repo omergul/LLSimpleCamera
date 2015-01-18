@@ -227,6 +227,9 @@
 - (void)setCaptureDevice:(AVCaptureDevice *)captureDevice {
     _captureDevice = captureDevice;
     
+    // reset flash
+    self.cameraFlash = CameraFlashOff;
+    
     if(self.delegate) {
         if ([self.delegate respondsToSelector:@selector(cameraViewController:didChangeDevice:)]) {
             [self.delegate cameraViewController:self didChangeDevice:captureDevice];
@@ -241,31 +244,47 @@
     return deviceInput.device.isTorchAvailable;
 }
 
+
 -(void)setCameraFlash:(CameraFlash)cameraFlash {
     
-    AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
-    AVCaptureDeviceInput *deviceInput = (AVCaptureDeviceInput *)currentCameraInput;
-    
-    if(!deviceInput.device.isTorchAvailable) {
-        return;
+    AVCaptureFlashMode flashMode;
+    if(cameraFlash == CameraFlashOff) {
+        flashMode = AVCaptureFlashModeOff;
+    }
+    else if(cameraFlash == CameraFlashOn) {
+        flashMode = AVCaptureFlashModeOn;
+    }
+    else if(cameraFlash == CameraFlashAuto) {
+        flashMode = AVCaptureFlashModeAuto;
     }
     
-    _cameraFlash = cameraFlash;
+    BOOL done = [self setFlashMode:flashMode];
     
-    [self.session beginConfiguration];
-    [deviceInput.device lockForConfiguration:nil];
-    
-    if(_cameraFlash == CameraFlashOn) {
-        deviceInput.device.torchMode = AVCaptureTorchModeOn;
+    if(done) {
+        _cameraFlash = cameraFlash;
     }
     else {
-        deviceInput.device.torchMode = AVCaptureTorchModeOff;
+        _cameraFlash = CameraFlashOff;
+    }
+}
+
+- (BOOL) setFlashMode:(AVCaptureFlashMode)flashMode
+{
+    if([_captureDevice isFlashModeSupported:flashMode]) {
+        
+        if(_captureDevice.flashMode == flashMode) {
+            return YES;
+        }
+        
+        if([_captureDevice lockForConfiguration:nil]) {
+            _captureDevice.flashMode = flashMode;
+            [_captureDevice unlockForConfiguration];
+            
+            return YES;
+        }
     }
     
-    [deviceInput.device unlockForConfiguration];
-    
-    //Commit all the configuration changes at once
-    [self.session commitConfiguration];
+    return NO;
 }
 
 - (CameraPosition)togglePosition {
@@ -279,31 +298,20 @@
     return self.cameraPosition;
 }
 
-- (CameraFlash)toggleFlash {
-    if(self.cameraFlash == CameraFlashOn) {
-        self.cameraFlash = CameraFlashOff;
-    }
-    else {
-        self.cameraFlash = CameraFlashOn;
-    }
-    
-    return self.cameraFlash;
-}
-
 - (void)setCameraPosition:(CameraPosition)cameraPosition
 {
     if(_cameraPosition == cameraPosition) {
         return;
     }
     
-    //Indicate that some changes will be made to the session
+    // indicate that some changes will be made to the session
     [self.session beginConfiguration];
     
-    //Remove existing input
+    // remove existing input
     AVCaptureInput* currentCameraInput = [self.session.inputs objectAtIndex:0];
     [self.session removeInput:currentCameraInput];
     
-    //Get new input
+    // get new input
     AVCaptureDevice *newCamera = nil;
     if(((AVCaptureDeviceInput*)currentCameraInput).device.position == AVCaptureDevicePositionBack) {
         newCamera = [self cameraWithPosition:AVCaptureDevicePositionFront];

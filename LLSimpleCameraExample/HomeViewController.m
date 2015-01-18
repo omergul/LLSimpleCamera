@@ -96,11 +96,12 @@
 
 - (void)flashButtonPressed:(UIButton *)button {
     
-    CameraFlash flash = [self.camera toggleFlash];
-    if(flash == CameraFlashOn) {
+    if(self.camera.cameraFlash == CameraFlashOff) {
+        self.camera.cameraFlash = CameraFlashOn;
         self.flashButton.selected = YES;
     }
     else {
+        self.camera.cameraFlash = CameraFlashOff;
         self.flashButton.selected = NO;
     }
 }
