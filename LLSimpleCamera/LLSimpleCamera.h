@@ -28,8 +28,6 @@ typedef enum : NSUInteger {
     CameraQualityPhoto
 } CameraQuality;
 
-@protocol LLSimpleCameraDelegate;
-
 @interface LLSimpleCamera : UIViewController
 
 /**
