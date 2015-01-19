@@ -47,11 +47,9 @@
         
         // device changed, check if flash is available
         if([camera isFlashAvailable]) {
-            NSLog(@"flash is yeeees!!");
             weakSelf.flashButton.hidden = NO;
         }
         else {
-            NSLog(@"flash is nooooo!!");
             weakSelf.flashButton.hidden = YES;
         }
         
