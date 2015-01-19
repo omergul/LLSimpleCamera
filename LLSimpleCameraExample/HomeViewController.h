@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "LLSimpleCamera.h"
 
-@interface HomeViewController : UIViewController <LLSimpleCameraDelegate>
+@interface HomeViewController : UIViewController
 
 @end

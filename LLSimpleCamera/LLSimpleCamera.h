@@ -16,9 +16,9 @@ typedef enum : NSUInteger {
 
 typedef enum : NSUInteger {
     // The default state has to be off
-    // FIXES: Unresposive first touch to toggle flash.
     CameraFlashOff,
-    CameraFlashOn
+    CameraFlashOn,
+    CameraFlashAuto
 } CameraFlash;
 
 typedef enum : NSUInteger {
@@ -28,53 +28,62 @@ typedef enum : NSUInteger {
     CameraQualityPhoto
 } CameraQuality;
 
-@protocol LLSimpleCameraDelegate;
-
 @interface LLSimpleCamera : UIViewController
 
 /**
-The LLSimpleCameraDelegate delegate.
+ * Triggered on device change.
  */
-@property (nonatomic, weak) id<LLSimpleCameraDelegate> delegate;
+@property (nonatomic, copy) void (^onDeviceChange)(LLSimpleCamera *camera, AVCaptureDevice *device);
 
 /**
- The status of the camera flash.
+ * Triggered on any kind of error.
+ */
+@property (nonatomic, copy) void (^onError)(LLSimpleCamera *camera, NSError *error);
+
+/**
+ * Camera flash mode.
  */
 @property (nonatomic) CameraFlash cameraFlash;
+
 /**
- The position of the camera.
+ * Position of the camera.
  */
 @property (nonatomic) CameraPosition cameraPosition;
 
 /**
- Fixess the orientation after the image is captured is set to Yes.
- see: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
+ * Fixess the orientation after the image is captured is set to Yes.
+ * see: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
  */
 @property (nonatomic) BOOL fixOrientationAfterCapture;
 
 /**
- Returns an instance of LLSimpleCamera with the given quality.
- @param quality The quality of the camera.
+ * Set NO if you don't want ot enable user triggered focusing. Enabled by default.
  */
-- (instancetype)initWithQuality:(CameraQuality)quality;
+@property (nonatomic) BOOL tapToFocus;
 
 /**
- Starts running the camera session.
+ * Returns an instance of LLSimpleCamera with the given quality.
+ * @param quality The quality of the camera.
+ */
+- (instancetype)initWithQuality:(CameraQuality)quality andPosition:(CameraPosition)position;
+
+/**
+ * Starts running the camera session.
  */
 - (void)start;
 
 /**
- Stops the running camera session. Needs to be called when the app doesn't show the view.
+ * Stops the running camera session. Needs to be called when the app doesn't show the view.
  */
 - (void)stop;
 
 /**
- Attaches the LLSimpleCamera to another vs with a delegate. It basically adds the LLSimpleCamera as a
- child vc to the given vc.
- @param vc A view controller.
- @param delegate The LLSimpleCamera delegate vc.
+ * Attaches the LLSimpleCamera to another view controller with a frame. It basically adds the LLSimpleCamera as a
+ * child vc to the given vc.
+ * @param vc A view controller.
+ * @param frame The frame of the camera.
  */
-- (void)attachToViewController:(UIViewController *)vc withDelegate:(id<LLSimpleCameraDelegate>)delegate;
+- (void)attachToViewController:(UIViewController *)vc withFrame:(CGRect)frame;
 
 /**
  Changes the posiition of the camera (either back or front) and returns the final position.
@@ -82,32 +91,21 @@ The LLSimpleCameraDelegate delegate.
 - (CameraPosition)togglePosition;
 
 /**
- Toggles the flash. If the device doesn't have a flash it returns CameraFlashOff.
- */
-- (CameraFlash)toggleFlash;
-
-/**
  Checks if flash is avilable for the currently active device.
  */
 - (BOOL)isFlashAvailable;
 
 /**
- Capture the image.
+ Alter the layer and the animation displayed when the user taps on screen.
+ @param layer Layer to be displayed
+ @param animation to be applied after the layer is shown
  */
-- (void)capture;
-@end
-
-@protocol LLSimpleCameraDelegate <NSObject>
-/**
- Triggered when the active camera device is changed. Programmer can use isFlashAvailable to check if the flash
- is available and show the related icons.
- */
-- (void)cameraViewController:(LLSimpleCamera*)cameraVC
-             didChangeDevice:(AVCaptureDevice *)device;
+- (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
 /**
- Triggered after the image is captured by the camera.
+ * Capture the image.
+ * @param onCapture a block triggered after the capturing the photo.
  */
-- (void)cameraViewController:(LLSimpleCamera*)cameraVC
-             didCaptureImage:(UIImage *)image;
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
+
 @end

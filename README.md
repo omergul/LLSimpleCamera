@@ -10,6 +10,12 @@ LLSimpleCamera is a library for creating a customized camera screens similar to 
 * hides the nitty gritty details from the developer
 * doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
+### Version 2.0.0
+Some significant changes have been made at both internal structure and  api.
+- added tap to focus feature (it is fully customizable, if you don't like the default layer and animation)
+- removed delegates and added blocks
+- interface is significantly improved
+
 ### Version 1.1.1
 - fixed a potential crash scenario if -stop() is called multiple times
 
@@ -19,7 +25,7 @@ LLSimpleCamera is a library for creating a customized camera screens similar to 
 
 ## Install
 
-pod 'LLSimpleCamera', '~> 1.1'
+pod 'LLSimpleCamera', '~> 2.0'
 
 ## Example usage
 
@@ -27,40 +33,33 @@ pod 'LLSimpleCamera', '~> 1.1'
 CGRect screenRect = [[UIScreen mainScreen] bounds];
 
 // create camera vc
-self.camera = [[LLSimpleCamera alloc] initWithQuality:CameraQualityPhoto];
+self.camera = [[LLSimpleCamera alloc] initWithQuality:CameraQualityPhoto andPosition:CameraPositionBack];
 
-// attach to the view and assign a delegate
-[self.camera attachToViewController:self withDelegate:self];
-
-// set the camera view frame to size and origin required for your app
-self.camera.view.frame = CGRectMake(0, 0, screenRect.size.width, screenRect.size.height);
-````
-
-and here are the example delegates:
+// attach to the view
+[self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
 
 ````
-/* camera delegates */
-- (void)cameraViewController:(LLSimpleCamera *)cameraVC didCaptureImage:(UIImage *)image {
-    
-    // we should stop the camera, since we don't need it anymore. We will open a new vc.
-    [self.camera stop];
-    
-    ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
-    [self presentViewController:imageVC animated:NO completion:nil];
-}
 
-- (void)cameraViewController:(LLSimpleCamera *)cameraVC didChangeDevice:(AVCaptureDevice *)device {
-    
-    // device changed, check if flash is available
-    if(cameraVC.isFlashAvailable) {
-        self.flashButton.hidden = NO;
-    }
-    else {
-        self.flashButton.hidden = YES;
-    }
-    
-    self.flashButton.selected = NO;
-}
+To capture a photo:
+
+````
+// capture
+[self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
+    if(!error) {    
+        // we should stop the camera, since we don't need it anymore. We will open a new vc.
+        // this very important, otherwise you may experience memory crashes
+        [camera stop];
+            
+        // show the image
+        ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
+        [self presentViewController:imageVC animated:NO completion:nil];
+       }
+}];
+````
+
+Changing the focus layer and animation:
+````
+- (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 ````
 
 ## Adding the camera controls
@@ -69,7 +68,7 @@ You have to add your own camera controls (flash, camera switch etc). Simply add 
 
 ## Stopping and restarting the camera
 
-You should never forget to stop the camera either after the **didCaptureImage** delegate is triggered, or inside somewhere **-viewWillDisappear** of the parent controller to make sure that the app doesn't use the camera when it is not needed. You can call **-start()** to use the camera. So it may be good idea to to place **-start()** inside **-viewWillAppear** or in another relevant method.
+You should never forget to stop the camera either after the capture block is triggered, or inside somewhere **-viewWillDisappear** of the parent controller to make sure that the app doesn't use the camera when it is not needed. You can call **-start()** to reuse the camera. So it may be good idea to to place **-start()** inside **-viewWillAppear** or in another relevant method.
 
 ## Contact
 
