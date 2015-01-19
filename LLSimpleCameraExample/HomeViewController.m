@@ -30,7 +30,7 @@
     // ----- initialize camera -------- //
     
     // create camera vc
-    self.camera = [[LLSimpleCamera alloc] initWithQuality:CameraQualityPhoto];
+    self.camera = [[LLSimpleCamera alloc] initWithQuality:CameraQualityPhoto andPosition:CameraPositionBack];
     
     // attach to the view and assign a delegate
     [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
@@ -43,13 +43,15 @@
     __weak typeof(self) weakSelf = self;
     [self.camera setOnDeviceChange:^(LLSimpleCamera *camera, AVCaptureDevice * device) {
         
-        NSLog(@"Device changed!");
+        NSLog(@"Device changed.");
         
         // device changed, check if flash is available
-        if(camera.isFlashAvailable) {
+        if([camera isFlashAvailable]) {
+            NSLog(@"flash is yeeees!!");
             weakSelf.flashButton.hidden = NO;
         }
         else {
+            NSLog(@"flash is nooooo!!");
             weakSelf.flashButton.hidden = YES;
         }
         

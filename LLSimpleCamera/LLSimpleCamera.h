@@ -67,7 +67,7 @@ typedef enum : NSUInteger {
  * Returns an instance of LLSimpleCamera with the given quality.
  * @param quality The quality of the camera.
  */
-- (instancetype)initWithQuality:(CameraQuality)quality;
+- (instancetype)initWithQuality:(CameraQuality)quality andPosition:(CameraPosition)position;
 
 /**
  * Starts running the camera session.

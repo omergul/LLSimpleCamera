@@ -25,10 +25,11 @@
 
 @implementation LLSimpleCamera
 
-- (instancetype)initWithQuality:(CameraQuality)quality {
+- (instancetype)initWithQuality:(CameraQuality)quality andPosition:(CameraPosition)position {
     self = [super initWithNibName:nil bundle:nil];
     if(self) {
         self.cameraQuality = quality;
+        self.cameraPosition = position;
         self.fixOrientationAfterCapture = NO;
         self.tapToFocus = YES;
     }
@@ -147,7 +148,25 @@
         
         self.captureVideoPreviewLayer = captureVideoPreviewLayer;
         
-        self.captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        AVCaptureDevicePosition devicePosition;
+        switch (self.cameraPosition) {
+            case CameraPositionBack:
+                devicePosition = AVCaptureDevicePositionBack;
+                break;
+            case CameraPositionFront:
+                devicePosition = AVCaptureDevicePositionFront;
+                break;
+            default:
+                devicePosition = AVCaptureDevicePositionUnspecified;
+                break;
+        }
+        
+        if(devicePosition == AVCaptureDevicePositionUnspecified) {
+            self.captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        }
+        else {
+            self.captureDevice = [self cameraWithPosition:devicePosition];
+        }
         
         NSError *error = nil;
         _deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:self.captureDevice error:&error];
@@ -240,8 +259,7 @@
 }
 
 - (BOOL)isFlashAvailable {
-    
-    return _deviceInput.device.isTorchAvailable;
+    return self.captureDevice.isFlashAvailable;
 }
 
 
@@ -349,7 +367,7 @@
 {
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     for (AVCaptureDevice *device in devices) {
-        if ([device position] == position) return device;
+        if (device.position == position) return device;
     }
     return nil;
 }
