@@ -163,6 +163,8 @@
     
     AVCaptureConnection *videoConnection = [self captureConnection];
     
+    videoConnection.videoOrientation = [self orientationForConnection];
+
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
          CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
@@ -307,30 +309,28 @@
     self.captureVideoPreviewLayer.bounds=bounds;
     self.captureVideoPreviewLayer.position=CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
+    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+}
+
+
+- (AVCaptureVideoOrientation)orientationForConnection
+{
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
-    
     switch (self.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-            videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-            break;
-        case UIInterfaceOrientationLandscapeRight:
-            videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-            break;
-        case UIInterfaceOrientationPortraitUpsideDown:
-            videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-            break;
-        default:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-            break;
+    case UIInterfaceOrientationLandscapeLeft:
+        videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+        break;
+    case UIInterfaceOrientationLandscapeRight:
+        videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+        break;
+    case UIInterfaceOrientationPortraitUpsideDown:
+        videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+        break;
+    default:
+        videoOrientation = AVCaptureVideoOrientationPortrait;
+        break;
     }
-    
-    self.captureVideoPreviewLayer.connection.videoOrientation = videoOrientation;
+    return videoOrientation;
 }
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 
 @end
