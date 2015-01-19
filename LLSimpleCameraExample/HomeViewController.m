@@ -32,7 +32,7 @@
     // create camera vc
     self.camera = [[LLSimpleCamera alloc] initWithQuality:CameraQualityPhoto andPosition:CameraPositionBack];
     
-    // attach to the view and assign a delegate
+    // attach to a view controller
     [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
     
     // read: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
@@ -126,7 +126,7 @@
 
 - (void)snapButtonPressed:(UIButton *)button {
     
-    // capture the image, delegate will be executed
+    // capture
     [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
         if(!error) {
             
@@ -139,21 +139,6 @@
             [self presentViewController:imageVC animated:NO completion:nil];
         }
     }];
-}
-
-/* camera delegates */
-
-- (void)cameraViewController:(LLSimpleCamera *)cameraVC didChangeDevice:(AVCaptureDevice *)device {
-    
-    // device changed, check if flash is available
-    if(cameraVC.isFlashAvailable) {
-        self.flashButton.hidden = NO;
-    }
-    else {
-        self.flashButton.hidden = YES;
-    }
-    
-    self.flashButton.selected = NO;
 }
 
 /* other lifecycle methods */
