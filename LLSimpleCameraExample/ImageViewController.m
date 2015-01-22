@@ -32,19 +32,20 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.imageView.backgroundColor = [UIColor yellowColor];
+    self.imageView.backgroundColor = [UIColor blackColor];
     
-    //self.image = [self.image crop:CGRectMake(0, 0, self.image.size.width, self.image.size.width)];
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
     
-    self.imageView = [[UIImageView alloc] initWithImage:self.image];
+    self.imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
     self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     self.imageView.backgroundColor = [UIColor clearColor];
+    self.imageView.image = self.image;
     [self.view addSubview:self.imageView];
     
-    NSString *info = [NSString stringWithFormat:@"Size: %@, orientation: %d", NSStringFromCGSize(self.image.size), self.image.imageOrientation];
+    NSString *info = [NSString stringWithFormat:@"Size: %@  -  Orientation: %d", NSStringFromCGSize(self.image.size), self.image.imageOrientation];
     
     self.infoLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 100, 20)];
-    self.infoLabel.backgroundColor = [[UIColor blueColor] colorWithAlphaComponent:0.7];
+    self.infoLabel.backgroundColor = [[UIColor darkGrayColor] colorWithAlphaComponent:0.7];
     self.infoLabel.textColor = [UIColor whiteColor];
     self.infoLabel.font = [UIFont fontWithName:@"AvenirNext-Regular" size:13];
     self.infoLabel.textAlignment = NSTextAlignmentCenter;

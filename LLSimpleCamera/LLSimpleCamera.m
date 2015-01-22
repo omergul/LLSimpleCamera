@@ -193,9 +193,11 @@
 }
 
 
--(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture {
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
     
+    // get connection and set orientation
     AVCaptureConnection *videoConnection = [self captureConnection];
+    videoConnection.videoOrientation = [self orientationForConnection];
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
@@ -212,6 +214,10 @@
              NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
              image = [[UIImage alloc] initWithData:imageData];
              
+             if(exactSeenImage) {
+                 image = [self cropImageUsingPreviewBounds:image];
+             }
+             
              if(self.fixOrientationAfterCapture) {
                  image = [image fixOrientation];
              }
@@ -222,6 +228,25 @@
              onCapture(self, image, metadata, error);
          }
      }];
+}
+
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture {
+    [self capture:onCapture exactSeenImage:NO];
+}
+
+
+- (UIImage *)cropImageUsingPreviewBounds:(UIImage *)image {
+    CGRect outputRect = [self.captureVideoPreviewLayer metadataOutputRectOfInterestForRect:self.captureVideoPreviewLayer.bounds];
+    CGImageRef takenCGImage = image.CGImage;
+    size_t width = CGImageGetWidth(takenCGImage);
+    size_t height = CGImageGetHeight(takenCGImage);
+    CGRect cropRect = CGRectMake(outputRect.origin.x * width, outputRect.origin.y * height, outputRect.size.width * width, outputRect.size.height * height);
+    
+    CGImageRef cropCGImage = CGImageCreateWithImageInRect(takenCGImage, cropRect);
+    image = [UIImage imageWithCGImage:cropCGImage scale:1 orientation:image.imageOrientation];
+    CGImageRelease(cropCGImage);
+    
+    return image;
 }
 
 #pragma mark Helper Methods
@@ -266,14 +291,15 @@
 -(void)setCameraFlash:(CameraFlash)cameraFlash {
     
     AVCaptureFlashMode flashMode;
-    if(cameraFlash == CameraFlashOff) {
-        flashMode = AVCaptureFlashModeOff;
-    }
-    else if(cameraFlash == CameraFlashOn) {
+
+    if(cameraFlash == CameraFlashOn) {
         flashMode = AVCaptureFlashModeOn;
     }
     else if(cameraFlash == CameraFlashAuto) {
         flashMode = AVCaptureFlashModeAuto;
+    }
+    else {
+        flashMode = AVCaptureFlashModeOff;
     }
     
     BOOL done = [self setFlashMode:flashMode];
@@ -497,8 +523,12 @@
     self.captureVideoPreviewLayer.bounds = bounds;
     self.captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
+    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+}
+
+- (AVCaptureVideoOrientation)orientationForConnection
+{
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
-    
     switch (self.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
             videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
@@ -513,8 +543,7 @@
             videoOrientation = AVCaptureVideoOrientationPortrait;
             break;
     }
-    
-    self.captureVideoPreviewLayer.connection.videoOrientation = videoOrientation;
+    return videoOrientation;
 }
 
 - (void)didReceiveMemoryWarning {
