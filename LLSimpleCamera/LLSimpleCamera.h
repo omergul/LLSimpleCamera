@@ -102,10 +102,19 @@ typedef enum : NSUInteger {
  */
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
+
+/**
+ * Capture the image.
+ * @param onCapture a block triggered after the capturing the photo.
+ * @param exactSeenImage If set YES, then the image is cropped to the exact size as the preview. So you get exactly what you see.
+ */
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage;
+
 /**
  * Capture the image.
  * @param onCapture a block triggered after the capturing the photo.
  */
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
+
 
 @end

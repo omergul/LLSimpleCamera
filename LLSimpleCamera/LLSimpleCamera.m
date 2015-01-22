@@ -193,7 +193,7 @@
 }
 
 
--(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture {
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
     
     AVCaptureConnection *videoConnection = [self captureConnection];
     
@@ -212,6 +212,10 @@
              NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
              image = [[UIImage alloc] initWithData:imageData];
              
+             if(exactSeenImage) {
+                 image = [self cropImageUsingPreviewBounds:image];
+             }
+             
              if(self.fixOrientationAfterCapture) {
                  image = [image fixOrientation];
              }
@@ -222,6 +226,25 @@
              onCapture(self, image, metadata, error);
          }
      }];
+}
+
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture {
+    [self capture:onCapture exactSeenImage:NO];
+}
+
+
+- (UIImage *)cropImageUsingPreviewBounds:(UIImage *)image {
+    CGRect outputRect = [self.captureVideoPreviewLayer metadataOutputRectOfInterestForRect:self.captureVideoPreviewLayer.bounds];
+    CGImageRef takenCGImage = image.CGImage;
+    size_t width = CGImageGetWidth(takenCGImage);
+    size_t height = CGImageGetHeight(takenCGImage);
+    CGRect cropRect = CGRectMake(outputRect.origin.x * width, outputRect.origin.y * height, outputRect.size.width * width, outputRect.size.height * height);
+    
+    CGImageRef cropCGImage = CGImageCreateWithImageInRect(takenCGImage, cropRect);
+    image = [UIImage imageWithCGImage:cropCGImage scale:1 orientation:image.imageOrientation];
+    CGImageRelease(cropCGImage);
+    
+    return image;
 }
 
 #pragma mark Helper Methods
