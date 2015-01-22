@@ -195,7 +195,9 @@
 
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
     
+    // get connection and set orientation
     AVCaptureConnection *videoConnection = [self captureConnection];
+    videoConnection.videoOrientation = [self orientationForConnection];
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
@@ -289,14 +291,15 @@
 -(void)setCameraFlash:(CameraFlash)cameraFlash {
     
     AVCaptureFlashMode flashMode;
-    if(cameraFlash == CameraFlashOff) {
-        flashMode = AVCaptureFlashModeOff;
-    }
-    else if(cameraFlash == CameraFlashOn) {
+
+    if(cameraFlash == CameraFlashOn) {
         flashMode = AVCaptureFlashModeOn;
     }
     else if(cameraFlash == CameraFlashAuto) {
         flashMode = AVCaptureFlashModeAuto;
+    }
+    else {
+        flashMode = AVCaptureFlashModeOff;
     }
     
     BOOL done = [self setFlashMode:flashMode];
@@ -520,8 +523,12 @@
     self.captureVideoPreviewLayer.bounds = bounds;
     self.captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
+    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+}
+
+- (AVCaptureVideoOrientation)orientationForConnection
+{
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
-    
     switch (self.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
             videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
@@ -536,8 +543,7 @@
             videoOrientation = AVCaptureVideoOrientationPortrait;
             break;
     }
-    
-    self.captureVideoPreviewLayer.connection.videoOrientation = videoOrientation;
+    return videoOrientation;
 }
 
 - (void)didReceiveMemoryWarning {
