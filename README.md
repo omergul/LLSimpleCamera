@@ -10,6 +10,11 @@ LLSimpleCamera is a library for creating a customized camera screens similar to 
 * hides the nitty gritty details from the developer
 * doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
+### Version 2.1.0
+- added an extra parameter exactSeenImage:(BOOL)exactSeenImage to -capture method to easily get the exact seen image on the screen instead of the raw uncropped image. The default value is NO.
+
+- fixed an orientation bug inside capture method.
+
 ### Version 2.0.0
 Some significant changes have been made at both internal structure and  api.
 - added tap to focus feature (it is fully customizable, if you don't like the default layer and animation)
