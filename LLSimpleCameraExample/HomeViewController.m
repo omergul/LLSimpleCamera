@@ -138,7 +138,7 @@
             ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
             [self presentViewController:imageVC animated:NO completion:nil];
         }
-    }];
+    } exactSeenImage:YES];
 }
 
 /* other lifecycle methods */
