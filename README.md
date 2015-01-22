@@ -12,7 +12,6 @@ LLSimpleCamera is a library for creating a customized camera screens similar to 
 
 ### Version 2.1.0
 - added an extra parameter exactSeenImage:(BOOL)exactSeenImage to -capture method to easily get the exact seen image on the screen instead of the raw uncropped image. The default value is NO.
-
 - fixed an orientation bug inside capture method.
 
 ### Version 2.0.0
