@@ -185,6 +185,11 @@
         [self.session addOutput:self.stillImageOutput];
     }
     
+    //if we had disabled the connection on capture, re-enable it
+    if (![self.captureVideoPreviewLayer.connection isEnabled]) {
+        [self.captureVideoPreviewLayer.connection setEnabled:YES];
+    }
+    
     [self.session startRunning];
 }
 
@@ -201,6 +206,9 @@
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
+         //Stop capturing data to freeze the screen to indicate the pictrue has been taken
+         [self.captureVideoPreviewLayer.connection setEnabled:NO];
+         
          UIImage *image = nil;
          NSDictionary *metadata = nil;
          
