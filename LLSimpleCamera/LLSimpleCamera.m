@@ -11,7 +11,6 @@
 #import "UIImage+FixOrientation.h"
 
 @interface LLSimpleCamera ()
-@property (nonatomic) CameraQuality cameraQuality;
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;

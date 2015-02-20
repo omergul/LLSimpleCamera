@@ -41,6 +41,11 @@ typedef enum : NSUInteger {
 @property (nonatomic, copy) void (^onError)(LLSimpleCamera *camera, NSError *error);
 
 /**
+ * Camera quality, changing the value will only take effect at [LLSimpleCamera start]
+ */
+@property (nonatomic) CameraQuality cameraQuality;
+
+/**
  * Camera flash mode.
  */
 @property (nonatomic) CameraFlash cameraFlash;
