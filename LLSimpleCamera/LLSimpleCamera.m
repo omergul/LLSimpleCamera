@@ -537,7 +537,7 @@
 - (AVCaptureVideoOrientation)orientationForConnection
 {
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
-    switch (self.interfaceOrientation) {
+    switch ([[UIDevice currentDevice] orientation]) {
         case UIInterfaceOrientationLandscapeLeft:
             videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
             break;
