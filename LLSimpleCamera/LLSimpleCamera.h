@@ -68,6 +68,12 @@ typedef enum : NSUInteger {
 @property (nonatomic) BOOL tapToFocus;
 
 /**
+ * Set YES if you your view controller does not allow autorotation,
+ * however you want to take the device rotation into account no matter what. Disabled by default.
+ */
+@property (nonatomic) BOOL useDeviceOrientation;
+
+/**
  * Returns an instance of LLSimpleCamera with the given quality.
  * @param quality The quality of the camera.
  */

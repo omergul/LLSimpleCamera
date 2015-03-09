@@ -34,6 +34,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         self.cameraPosition = position;
         self.fixOrientationAfterCapture = NO;
         self.tapToFocus = YES;
+        self.useDeviceOrientation = NO;
     }
     
     return self;
@@ -573,20 +574,41 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (AVCaptureVideoOrientation)orientationForConnection
 {
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
-    switch ([UIDevice currentDevice].orientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-            videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-            break;
-        case UIInterfaceOrientationLandscapeRight:
-            videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-            break;
-        case UIInterfaceOrientationPortraitUpsideDown:
-            videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-            break;
-        default:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-            break;
+    
+    if(self.useDeviceOrientation) {
+        switch ([UIDevice currentDevice].orientation) {
+            case UIDeviceOrientationLandscapeLeft:
+                // yes we to the right, this is not bug!
+                videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+                break;
+            case UIDeviceOrientationLandscapeRight:
+                videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+                break;
+            case UIDeviceOrientationPortraitUpsideDown:
+                videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+                break;
+            default:
+                videoOrientation = AVCaptureVideoOrientationPortrait;
+                break;
+        }
     }
+    else {
+        switch (self.interfaceOrientation) {
+            case UIInterfaceOrientationLandscapeLeft:
+                videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+                break;
+            case UIInterfaceOrientationPortraitUpsideDown:
+                videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+                break;
+            default:
+                videoOrientation = AVCaptureVideoOrientationPortrait;
+                break;
+        }
+    }
+    
     return videoOrientation;
 }
 
