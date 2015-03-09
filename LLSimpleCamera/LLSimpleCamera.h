@@ -28,6 +28,12 @@ typedef enum : NSUInteger {
     CameraQualityPhoto
 } CameraQuality;
 
+extern NSString *const LLSimpleCameraErrorDomain;
+typedef enum : NSUInteger {
+    LLSimpleCameraErrorCodePermission = 10,
+    LLSimpleCameraErrorCodeSession = 11
+} LLSimpleCameraErrorCode;
+
 @interface LLSimpleCamera : UIViewController
 
 /**

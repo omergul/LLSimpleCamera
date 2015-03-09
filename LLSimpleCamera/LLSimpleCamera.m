@@ -23,6 +23,8 @@
 @property (strong, nonatomic) CAAnimation *focusBoxAnimation;
 @end
 
+NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
+
 @implementation LLSimpleCamera
 
 - (instancetype)initWithQuality:(CameraQuality)quality andPosition:(CameraPosition)position {
@@ -113,9 +115,29 @@
 #pragma mark Camera Actions
 
 - (void)start {
-    
+    // in iOS7 & iOS8 we have check if we have permission t camera
+    if ([AVCaptureDevice respondsToSelector:@selector(requestAccessForMediaType: completionHandler:)]) {
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            if (granted) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self initialize];
+                });
+            } else {
+                NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
+                                                 code:LLSimpleCameraErrorCodePermission
+                                             userInfo:nil];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.onError(self, error);
+                });
+            }
+        }];
+    } else {
+        [self initialize];
+    }
+}
+
+- (void)initialize {
     if(!_session) {
-        
         self.session = [[AVCaptureSession alloc] init];
         
         NSString *sessionPreset = nil;
@@ -200,12 +222,20 @@
 
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
     
+    if(!self.session) {
+        NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
+                                    code:LLSimpleCameraErrorCodeSession
+                                userInfo:nil];
+        onCapture(self, nil, nil, error);
+        return;
+    }
+    
     // get connection and set orientation
     AVCaptureConnection *videoConnection = [self captureConnection];
     videoConnection.videoOrientation = [self orientationForConnection];
     
-    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
-     {
+    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
+        
          //Stop capturing data to freeze the screen to indicate the pictrue has been taken
          [self.captureVideoPreviewLayer.connection setEnabled:NO];
          
@@ -298,6 +328,9 @@
 
 -(void)setCameraFlash:(CameraFlash)cameraFlash {
     
+    if(!self.session)
+        return;
+    
     AVCaptureFlashMode flashMode;
 
     if(cameraFlash == CameraFlashOn) {
@@ -340,6 +373,10 @@
 }
 
 - (CameraPosition)togglePosition {
+    if(!self.session) {
+        return self.cameraPosition;
+    }
+    
     if(self.cameraPosition == CameraPositionBack) {
         self.cameraPosition = CameraPositionFront;
     }
@@ -352,7 +389,7 @@
 
 - (void)setCameraPosition:(CameraPosition)cameraPosition
 {
-    if(_cameraPosition == cameraPosition) {
+    if(_cameraPosition == cameraPosition || !self.session) {
         return;
     }
     
