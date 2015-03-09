@@ -42,7 +42,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _cameraFlash = CameraFlashOff;
+    _flash = CameraFlashOff;
     
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingNone;
@@ -171,7 +171,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         self.captureVideoPreviewLayer = captureVideoPreviewLayer;
         
         AVCaptureDevicePosition devicePosition;
-        switch (self.cameraPosition) {
+        switch (self.position) {
             case CameraPositionBack:
                 devicePosition = AVCaptureDevicePositionBack;
                 break;
@@ -312,8 +312,18 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)setCaptureDevice:(AVCaptureDevice *)captureDevice {
     _captureDevice = captureDevice;
     
-    // reset flash
-    self.cameraFlash = CameraFlashOff;
+    if(captureDevice.flashMode == AVCaptureFlashModeAuto) {
+        _flash = CameraFlashAuto;
+    }
+    else if(captureDevice.flashMode == AVCaptureFlashModeOn) {
+        _flash = CameraFlashOn;
+    }
+    else if(captureDevice.flashMode == AVCaptureFlashModeOff) {
+        _flash = CameraFlashOff;
+    }
+    else {
+        _flash = CameraFlashOff;
+    }
     
     // trigger block
     if(self.onDeviceChange) {
@@ -325,14 +335,12 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     return self.captureDevice.isFlashAvailable;
 }
 
-
--(void)setCameraFlash:(CameraFlash)cameraFlash {
-    
+- (BOOL)updateFlashMode:(CameraFlash)cameraFlash {
     if(!self.session)
-        return;
+        return NO;
     
     AVCaptureFlashMode flashMode;
-
+    
     if(cameraFlash == CameraFlashOn) {
         flashMode = AVCaptureFlashModeOn;
     }
@@ -343,53 +351,44 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         flashMode = AVCaptureFlashModeOff;
     }
     
-    BOOL done = [self setFlashMode:flashMode];
     
-    if(done) {
-        _cameraFlash = cameraFlash;
-    }
-    else {
-        _cameraFlash = CameraFlashOff;
-    }
-}
-
-- (BOOL) setFlashMode:(AVCaptureFlashMode)flashMode
-{
     if([_captureDevice isFlashModeSupported:flashMode]) {
-        
-        if(_captureDevice.flashMode == flashMode) {
-            return YES;
-        }
-        
-        if([_captureDevice lockForConfiguration:nil]) {
+        NSError *error;
+        if([_captureDevice lockForConfiguration:&error]) {
             _captureDevice.flashMode = flashMode;
             [_captureDevice unlockForConfiguration];
             
+            _flash = cameraFlash;
             return YES;
         }
+        else {
+            self.onError(self, error);
+            return NO;
+        }
     }
-    
-    return NO;
+    else {
+        return NO;
+    }
 }
 
 - (CameraPosition)togglePosition {
     if(!self.session) {
-        return self.cameraPosition;
+        return self.position;
     }
     
-    if(self.cameraPosition == CameraPositionBack) {
+    if(self.position == CameraPositionBack) {
         self.cameraPosition = CameraPositionFront;
     }
     else {
         self.cameraPosition = CameraPositionBack;
     }
     
-    return self.cameraPosition;
+    return self.position;
 }
 
 - (void)setCameraPosition:(CameraPosition)cameraPosition
 {
-    if(_cameraPosition == cameraPosition || !self.session) {
+    if(_position == cameraPosition || !self.session) {
         return;
     }
     
@@ -424,7 +423,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         return;
     }
     
-    _cameraPosition = cameraPosition;
+    _position = cameraPosition;
     
     [self.session addInput:newVideoInput];
     [self.session commitConfiguration];
