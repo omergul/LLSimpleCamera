@@ -12,6 +12,7 @@
 
 @interface HomeViewController ()
 @property (strong, nonatomic) LLSimpleCamera *camera;
+@property (strong, nonatomic) UILabel *errorLabel;
 @property (strong, nonatomic) UIButton *snapButton;
 @property (strong, nonatomic) UIButton *switchButton;
 @property (strong, nonatomic) UIButton *flashButton;
@@ -22,7 +23,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.view.backgroundColor = [UIColor redColor];
+    self.view.backgroundColor = [UIColor blackColor];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
     CGRect screenRect = [[UIScreen mainScreen] bounds];
@@ -58,6 +59,26 @@
     
     [self.camera setOnError:^(LLSimpleCamera *camera, NSError *error) {
         NSLog(@"Camera error: %@", error);
+        
+        if([error.domain isEqualToString:LLSimpleCameraErrorDomain]) {
+            if(error.code == LLSimpleCameraErrorCodePermission) {
+                if(weakSelf.errorLabel)
+                    [weakSelf.errorLabel removeFromSuperview];
+                
+                UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+                label.text = @"We need permission for the camera.\nPlease go to your settings.";
+                label.numberOfLines = 2;
+                label.lineBreakMode = NSLineBreakByWordWrapping;
+                label.backgroundColor = [UIColor clearColor];
+                label.font = [UIFont fontWithName:@"AvenirNext-DemiBold" size:13.0f];
+                label.textColor = [UIColor whiteColor];
+                label.textAlignment = NSTextAlignmentCenter;
+                [label sizeToFit];
+                label.center = CGPointMake(screenRect.size.width / 2.0f, screenRect.size.height / 2.0f);
+                weakSelf.errorLabel = label;
+                [weakSelf.view addSubview:weakSelf.errorLabel];
+            }
+        }
     }];
     
     // ----- camera buttons -------- //
@@ -137,6 +158,9 @@
             // show the image
             ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
             [self presentViewController:imageVC animated:NO completion:nil];
+        }
+        else {
+            NSLog(@"An error has occured: %@", error);
         }
     } exactSeenImage:YES];
 }
