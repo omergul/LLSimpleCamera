@@ -127,9 +127,12 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
                 NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
                                                  code:LLSimpleCameraErrorCodePermission
                                              userInfo:nil];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.onError(self, error);
-                });
+                
+                if(self.onError) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        self.onError(self, error);
+                    });
+                }
             }
         }];
     } else {
@@ -363,7 +366,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             return YES;
         }
         else {
-            self.onError(self, error);
+            if(self.onError) {
+                self.onError(self, error);
+            }
             return NO;
         }
     }
