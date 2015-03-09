@@ -28,6 +28,12 @@ typedef enum : NSUInteger {
     CameraQualityPhoto
 } CameraQuality;
 
+extern NSString *const LLSimpleCameraErrorDomain;
+typedef enum : NSUInteger {
+    LLSimpleCameraErrorCodePermission = 10,
+    LLSimpleCameraErrorCodeSession = 11
+} LLSimpleCameraErrorCode;
+
 @interface LLSimpleCamera : UIViewController
 
 /**
@@ -43,12 +49,12 @@ typedef enum : NSUInteger {
 /**
  * Camera flash mode.
  */
-@property (nonatomic) CameraFlash cameraFlash;
+@property (nonatomic, readonly) CameraFlash flash;
 
 /**
  * Position of the camera.
  */
-@property (nonatomic) CameraPosition cameraPosition;
+@property (nonatomic) CameraPosition position;
 
 /**
  * Fixess the orientation after the image is captured is set to Yes.
@@ -60,6 +66,12 @@ typedef enum : NSUInteger {
  * Set NO if you don't want ot enable user triggered focusing. Enabled by default.
  */
 @property (nonatomic) BOOL tapToFocus;
+
+/**
+ * Set YES if you your view controller does not allow autorotation,
+ * however you want to take the device rotation into account no matter what. Disabled by default.
+ */
+@property (nonatomic) BOOL useDeviceOrientation;
 
 /**
  * Returns an instance of LLSimpleCamera with the given quality.
@@ -86,19 +98,24 @@ typedef enum : NSUInteger {
 - (void)attachToViewController:(UIViewController *)vc withFrame:(CGRect)frame;
 
 /**
- Changes the posiition of the camera (either back or front) and returns the final position.
+ * Changes the posiition of the camera (either back or front) and returns the final position.
  */
 - (CameraPosition)togglePosition;
 
 /**
- Checks if flash is avilable for the currently active device.
+ * Update the flash mode of the camera. Returns true if it is successful. Otherwise false.
+ */
+- (BOOL)updateFlashMode:(CameraFlash)cameraFlash;
+
+/**
+ * Checks if flash is avilable for the currently active device.
  */
 - (BOOL)isFlashAvailable;
 
 /**
- Alter the layer and the animation displayed when the user taps on screen.
- @param layer Layer to be displayed
- @param animation to be applied after the layer is shown
+ * Alter the layer and the animation displayed when the user taps on screen.
+ * @param layer Layer to be displayed
+ * @param animation to be applied after the layer is shown
  */
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 

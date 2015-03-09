@@ -12,6 +12,7 @@
 
 @interface HomeViewController ()
 @property (strong, nonatomic) LLSimpleCamera *camera;
+@property (strong, nonatomic) UILabel *errorLabel;
 @property (strong, nonatomic) UIButton *snapButton;
 @property (strong, nonatomic) UIButton *switchButton;
 @property (strong, nonatomic) UIButton *flashButton;
@@ -22,7 +23,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.view.backgroundColor = [UIColor redColor];
+    self.view.backgroundColor = [UIColor blackColor];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
     CGRect screenRect = [[UIScreen mainScreen] bounds];
@@ -48,16 +49,41 @@
         // device changed, check if flash is available
         if([camera isFlashAvailable]) {
             weakSelf.flashButton.hidden = NO;
+            
+            if(camera.flash == CameraFlashOff) {
+                weakSelf.flashButton.selected = NO;
+            }
+            else {
+                weakSelf.flashButton.selected = YES;
+            }
         }
         else {
             weakSelf.flashButton.hidden = YES;
         }
-        
-        weakSelf.flashButton.selected = NO;
     }];
     
     [self.camera setOnError:^(LLSimpleCamera *camera, NSError *error) {
         NSLog(@"Camera error: %@", error);
+        
+        if([error.domain isEqualToString:LLSimpleCameraErrorDomain]) {
+            if(error.code == LLSimpleCameraErrorCodePermission) {
+                if(weakSelf.errorLabel)
+                    [weakSelf.errorLabel removeFromSuperview];
+                
+                UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+                label.text = @"We need permission for the camera.\nPlease go to your settings.";
+                label.numberOfLines = 2;
+                label.lineBreakMode = NSLineBreakByWordWrapping;
+                label.backgroundColor = [UIColor clearColor];
+                label.font = [UIFont fontWithName:@"AvenirNext-DemiBold" size:13.0f];
+                label.textColor = [UIColor whiteColor];
+                label.textAlignment = NSTextAlignmentCenter;
+                [label sizeToFit];
+                label.center = CGPointMake(screenRect.size.width / 2.0f, screenRect.size.height / 2.0f);
+                weakSelf.errorLabel = label;
+                [weakSelf.view addSubview:weakSelf.errorLabel];
+            }
+        }
     }];
     
     // ----- camera buttons -------- //
@@ -107,20 +133,25 @@
     [self.camera stop];
 }
 
-/* camera buttons */
+/* camera button methods */
+
 - (void)switchButtonPressed:(UIButton *)button {
     [self.camera togglePosition];
 }
 
 - (void)flashButtonPressed:(UIButton *)button {
     
-    if(self.camera.cameraFlash == CameraFlashOff) {
-        self.camera.cameraFlash = CameraFlashOn;
-        self.flashButton.selected = YES;
+    if(self.camera.flash == CameraFlashOff) {
+        BOOL done = [self.camera updateFlashMode:CameraFlashOn];
+        if(done) {
+            self.flashButton.selected = YES;
+        }
     }
     else {
-        self.camera.cameraFlash = CameraFlashOff;
-        self.flashButton.selected = NO;
+        BOOL done = [self.camera updateFlashMode:CameraFlashOff];
+        if(done) {
+            self.flashButton.selected = NO;
+        }
     }
 }
 
@@ -137,6 +168,9 @@
             // show the image
             ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
             [self presentViewController:imageVC animated:NO completion:nil];
+        }
+        else {
+            NSLog(@"An error has occured: %@", error);
         }
     } exactSeenImage:YES];
 }

@@ -23,6 +23,8 @@
 @property (strong, nonatomic) CAAnimation *focusBoxAnimation;
 @end
 
+NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
+
 @implementation LLSimpleCamera
 
 - (instancetype)initWithQuality:(CameraQuality)quality andPosition:(CameraPosition)position {
@@ -32,6 +34,7 @@
         self.cameraPosition = position;
         self.fixOrientationAfterCapture = NO;
         self.tapToFocus = YES;
+        self.useDeviceOrientation = NO;
     }
     
     return self;
@@ -40,7 +43,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _cameraFlash = CameraFlashOff;
+    _flash = CameraFlashOff;
     
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingNone;
@@ -113,9 +116,29 @@
 #pragma mark Camera Actions
 
 - (void)start {
-    
+    // in iOS7 & iOS8 we have check if we have permission t camera
+    if ([AVCaptureDevice respondsToSelector:@selector(requestAccessForMediaType: completionHandler:)]) {
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            if (granted) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self initialize];
+                });
+            } else {
+                NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
+                                                 code:LLSimpleCameraErrorCodePermission
+                                             userInfo:nil];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.onError(self, error);
+                });
+            }
+        }];
+    } else {
+        [self initialize];
+    }
+}
+
+- (void)initialize {
     if(!_session) {
-        
         self.session = [[AVCaptureSession alloc] init];
         
         NSString *sessionPreset = nil;
@@ -149,7 +172,7 @@
         self.captureVideoPreviewLayer = captureVideoPreviewLayer;
         
         AVCaptureDevicePosition devicePosition;
-        switch (self.cameraPosition) {
+        switch (self.position) {
             case CameraPositionBack:
                 devicePosition = AVCaptureDevicePositionBack;
                 break;
@@ -200,12 +223,20 @@
 
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
     
+    if(!self.session) {
+        NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
+                                    code:LLSimpleCameraErrorCodeSession
+                                userInfo:nil];
+        onCapture(self, nil, nil, error);
+        return;
+    }
+    
     // get connection and set orientation
     AVCaptureConnection *videoConnection = [self captureConnection];
     videoConnection.videoOrientation = [self orientationForConnection];
     
-    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
-     {
+    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
+        
          //Stop capturing data to freeze the screen to indicate the pictrue has been taken
          [self.captureVideoPreviewLayer.connection setEnabled:NO];
          
@@ -282,8 +313,18 @@
 - (void)setCaptureDevice:(AVCaptureDevice *)captureDevice {
     _captureDevice = captureDevice;
     
-    // reset flash
-    self.cameraFlash = CameraFlashOff;
+    if(captureDevice.flashMode == AVCaptureFlashModeAuto) {
+        _flash = CameraFlashAuto;
+    }
+    else if(captureDevice.flashMode == AVCaptureFlashModeOn) {
+        _flash = CameraFlashOn;
+    }
+    else if(captureDevice.flashMode == AVCaptureFlashModeOff) {
+        _flash = CameraFlashOff;
+    }
+    else {
+        _flash = CameraFlashOff;
+    }
     
     // trigger block
     if(self.onDeviceChange) {
@@ -295,11 +336,12 @@
     return self.captureDevice.isFlashAvailable;
 }
 
-
--(void)setCameraFlash:(CameraFlash)cameraFlash {
+- (BOOL)updateFlashMode:(CameraFlash)cameraFlash {
+    if(!self.session)
+        return NO;
     
     AVCaptureFlashMode flashMode;
-
+    
     if(cameraFlash == CameraFlashOn) {
         flashMode = AVCaptureFlashModeOn;
     }
@@ -310,49 +352,44 @@
         flashMode = AVCaptureFlashModeOff;
     }
     
-    BOOL done = [self setFlashMode:flashMode];
     
-    if(done) {
-        _cameraFlash = cameraFlash;
-    }
-    else {
-        _cameraFlash = CameraFlashOff;
-    }
-}
-
-- (BOOL) setFlashMode:(AVCaptureFlashMode)flashMode
-{
     if([_captureDevice isFlashModeSupported:flashMode]) {
-        
-        if(_captureDevice.flashMode == flashMode) {
-            return YES;
-        }
-        
-        if([_captureDevice lockForConfiguration:nil]) {
+        NSError *error;
+        if([_captureDevice lockForConfiguration:&error]) {
             _captureDevice.flashMode = flashMode;
             [_captureDevice unlockForConfiguration];
             
+            _flash = cameraFlash;
             return YES;
         }
+        else {
+            self.onError(self, error);
+            return NO;
+        }
     }
-    
-    return NO;
+    else {
+        return NO;
+    }
 }
 
 - (CameraPosition)togglePosition {
-    if(self.cameraPosition == CameraPositionBack) {
+    if(!self.session) {
+        return self.position;
+    }
+    
+    if(self.position == CameraPositionBack) {
         self.cameraPosition = CameraPositionFront;
     }
     else {
         self.cameraPosition = CameraPositionBack;
     }
     
-    return self.cameraPosition;
+    return self.position;
 }
 
 - (void)setCameraPosition:(CameraPosition)cameraPosition
 {
-    if(_cameraPosition == cameraPosition) {
+    if(_position == cameraPosition || !self.session) {
         return;
     }
     
@@ -387,7 +424,7 @@
         return;
     }
     
-    _cameraPosition = cameraPosition;
+    _position = cameraPosition;
     
     [self.session addInput:newVideoInput];
     [self.session commitConfiguration];
@@ -537,20 +574,41 @@
 - (AVCaptureVideoOrientation)orientationForConnection
 {
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
-    switch (self.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-            videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-            break;
-        case UIInterfaceOrientationLandscapeRight:
-            videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-            break;
-        case UIInterfaceOrientationPortraitUpsideDown:
-            videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-            break;
-        default:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-            break;
+    
+    if(self.useDeviceOrientation) {
+        switch ([UIDevice currentDevice].orientation) {
+            case UIDeviceOrientationLandscapeLeft:
+                // yes we to the right, this is not bug!
+                videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+                break;
+            case UIDeviceOrientationLandscapeRight:
+                videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+                break;
+            case UIDeviceOrientationPortraitUpsideDown:
+                videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+                break;
+            default:
+                videoOrientation = AVCaptureVideoOrientationPortrait;
+                break;
+        }
     }
+    else {
+        switch (self.interfaceOrientation) {
+            case UIInterfaceOrientationLandscapeLeft:
+                videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+                break;
+            case UIInterfaceOrientationPortraitUpsideDown:
+                videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+                break;
+            default:
+                videoOrientation = AVCaptureVideoOrientationPortrait;
+                break;
+        }
+    }
+    
     return videoOrientation;
 }
 
