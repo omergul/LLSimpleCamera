@@ -49,12 +49,17 @@
         // device changed, check if flash is available
         if([camera isFlashAvailable]) {
             weakSelf.flashButton.hidden = NO;
+            
+            if(camera.flash == CameraFlashOff) {
+                weakSelf.flashButton.selected = NO;
+            }
+            else {
+                weakSelf.flashButton.selected = YES;
+            }
         }
         else {
             weakSelf.flashButton.hidden = YES;
         }
-        
-        weakSelf.flashButton.selected = NO;
     }];
     
     [self.camera setOnError:^(LLSimpleCamera *camera, NSError *error) {
@@ -128,20 +133,25 @@
     [self.camera stop];
 }
 
-/* camera buttons */
+/* camera button methods */
+
 - (void)switchButtonPressed:(UIButton *)button {
     [self.camera togglePosition];
 }
 
 - (void)flashButtonPressed:(UIButton *)button {
     
-    if(self.camera.cameraFlash == CameraFlashOff) {
-        self.camera.cameraFlash = CameraFlashOn;
-        self.flashButton.selected = YES;
+    if(self.camera.flash == CameraFlashOff) {
+        BOOL done = [self.camera updateFlashMode:CameraFlashOn];
+        if(done) {
+            self.flashButton.selected = YES;
+        }
     }
     else {
-        self.camera.cameraFlash = CameraFlashOff;
-        self.flashButton.selected = NO;
+        BOOL done = [self.camera updateFlashMode:CameraFlashOff];
+        if(done) {
+            self.flashButton.selected = NO;
+        }
     }
 }
 
