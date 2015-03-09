@@ -38,7 +38,7 @@ Some significant changes have been made at both internal structure and  api.
 
 ## Install
 
-pod 'LLSimpleCamera', '~> 2.1'
+pod 'LLSimpleCamera', '~> 2.2'
 
 ## Example usage
 
