@@ -10,6 +10,12 @@ LLSimpleCamera is a library for creating a customized camera screens similar to 
 * hides the nitty gritty details from the developer
 * doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
+#### Version 2.2.0
+- camera permissions are supported, if the permission is not given by the user, onError will be triggered.
+- camera flash methods are altered. Now you have to call **- (BOOL)updateFlashMode:(CameraFlash)cameraFlash;**
+- cameraFlash and cameraPosition property names are simplified to: **flash** and **position**.
+- added support for device orientation in case your vc orientation is locked but you want to use the device orientation no matter what.
+
 #### Version 2.1.1
 - freezing the screen just after the photo is taken for better user experience.
 
@@ -32,7 +38,7 @@ Some significant changes have been made at both internal structure and  api.
 
 ## Install
 
-pod 'LLSimpleCamera', '~> 2.1'
+pod 'LLSimpleCamera', '~> 2.2'
 
 ## Example usage
 
