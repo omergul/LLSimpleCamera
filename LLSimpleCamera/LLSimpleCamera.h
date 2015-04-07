@@ -134,4 +134,13 @@ typedef enum : NSUInteger {
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
 
 
+
+/**
+ * Is the camera available ,and is the front/rear camera available.Use for iPod touch.
+ */
+- (BOOL) isCameraAvailable;
+
+- (BOOL) isFrontCameraAvailable;
+
+- (BOOL) isRearCameraAvailable;
 @end
