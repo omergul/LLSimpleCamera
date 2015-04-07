@@ -85,7 +85,7 @@
             }
         }
     }];
-    
+
     // ----- camera buttons -------- //
     
     // snap button to capture image
@@ -117,6 +117,16 @@
     self.switchButton.imageEdgeInsets = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
     [self.switchButton addTarget:self action:@selector(switchButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.switchButton];
+    
+    
+    if ([self.camera isCameraAvailable])
+    {
+        if (![self.camera isRearCameraAvailable])
+        {
+            [self.switchButton setHidden:YES];
+            self.camera.position = CameraPositionFront;
+        }
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {

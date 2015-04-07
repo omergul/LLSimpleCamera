@@ -622,4 +622,19 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     // Dispose of any resources that can be recreated.
 }
 
+- (BOOL) isCameraAvailable
+{
+    return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
+}
+
+- (BOOL) isFrontCameraAvailable
+{
+    return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
+}
+
+- (BOOL) isRearCameraAvailable
+{
+    return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
+}
+
 @end
