@@ -238,10 +238,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     AVCaptureConnection *videoConnection = [self captureConnection];
     videoConnection.videoOrientation = [self orientationForConnection];
     
+    //Stop capturing data to freeze the screen to indicate the picture is being taken
+    [self.captureVideoPreviewLayer.connection setEnabled:NO];
+    
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
-        
-         //Stop capturing data to freeze the screen to indicate the pictrue has been taken
-         [self.captureVideoPreviewLayer.connection setEnabled:NO];
          
          UIImage *image = nil;
          NSDictionary *metadata = nil;
