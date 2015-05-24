@@ -88,13 +88,13 @@ You should never forget to stop the camera either after the capture block is tri
 
 omer@omerfarukgul.com
 
- ## Version History
+## Version History
 
- #### Version 3.0.0
+#### Version 3.0.0
  - added video recording capability
  - class is heavily refactored 
 
- #### Version 2.2.0
+#### Version 2.2.0
 - camera permissions are supported, if the permission is not given by the user, onError will be triggered.
 - camera flash methods are altered. Now you have to call **- (BOOL)updateFlashMode:(CameraFlash)cameraFlash;**
 - cameraFlash and cameraPosition property names are simplified to: **flash** and **position**.
