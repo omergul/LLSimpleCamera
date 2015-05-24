@@ -85,11 +85,14 @@ You should never forget to stop the camera either after the capture block is tri
 Ömer Faruk Gül
 
 [Personal Site][2]
+
 omer@omerfarukgul.com
 
- [2]: http://omerfarukgul.com
+ ## Version History
 
- ## Version History ##
+ #### Version 3.0.0
+ - added video recording capability
+ - class is heavily refactored 
 
  #### Version 2.2.0
 - camera permissions are supported, if the permission is not given by the user, onError will be triggered.
@@ -118,5 +121,4 @@ Some significant changes have been made at both internal structure and  api.
 - improved code structure, didChangeDevice delegate is now also triggered for the first default device.
 
 
-
-
+[2]: http://omerfarukgul.com
