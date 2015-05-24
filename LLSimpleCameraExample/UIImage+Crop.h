@@ -1,9 +1,9 @@
 //
 //  UIImage+Crop.h
-//  Frizzbee
+//  LLSimpleCamera
 //
 //  Created by Ömer Faruk Gül on 27/10/14.
-//  Copyright (c) 2014 Louvre Digital. All rights reserved.
+//  Copyright (c) 2014 Ömer Faruk Gül. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
