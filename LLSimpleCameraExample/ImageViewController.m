@@ -15,7 +15,6 @@
 @property (strong, nonatomic) UIImageView *imageView;
 @property (strong, nonatomic) UILabel *infoLabel;
 @property (strong, nonatomic) UIButton *cancelButton;
-
 @end
 
 @implementation ImageViewController
@@ -23,7 +22,7 @@
 - (instancetype)initWithImage:(UIImage *)image {
     self = [super initWithNibName:nil bundle:nil];
     if(self) {
-        self.image = image;
+        _image = image;
     }
     
     return self;
@@ -42,7 +41,7 @@
     self.imageView.image = self.image;
     [self.view addSubview:self.imageView];
     
-    NSString *info = [NSString stringWithFormat:@"Size: %@  -  Orientation: %d", NSStringFromCGSize(self.image.size), self.image.imageOrientation];
+    NSString *info = [NSString stringWithFormat:@"Size: %@  -  Orientation: %ld", NSStringFromCGSize(self.image.size), (long)self.image.imageOrientation];
     
     self.infoLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 100, 20)];
     self.infoLabel.backgroundColor = [[UIColor darkGrayColor] colorWithAlphaComponent:0.7];
