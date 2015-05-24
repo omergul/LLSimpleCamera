@@ -9,6 +9,7 @@
 #import "HomeViewController.h"
 #import "ViewUtils.h"
 #import "ImageViewController.h"
+#import "VideoViewController.h"
 
 @interface HomeViewController ()
 @property (strong, nonatomic) LLSimpleCamera *camera;
@@ -16,6 +17,7 @@
 @property (strong, nonatomic) UIButton *snapButton;
 @property (strong, nonatomic) UIButton *switchButton;
 @property (strong, nonatomic) UIButton *flashButton;
+@property (strong, nonatomic) UISegmentedControl *segmentedControl;
 @end
 
 @implementation HomeViewController
@@ -31,7 +33,9 @@
     // ----- initialize camera -------- //
     
     // create camera vc
-    self.camera = [[LLSimpleCamera alloc] initWithQuality:CameraQualityPhoto andPosition:CameraPositionBack];
+    self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
+                                                 position:CameraPositionBack
+                                             videoEnabled:YES];
     
     // attach to a view controller
     [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
@@ -66,9 +70,12 @@
         NSLog(@"Camera error: %@", error);
         
         if([error.domain isEqualToString:LLSimpleCameraErrorDomain]) {
-            if(error.code == LLSimpleCameraErrorCodePermission) {
-                if(weakSelf.errorLabel)
+            if(error.code == LLSimpleCameraErrorCodeCameraPermission ||
+               error.code == LLSimpleCameraErrorCodeMicrophonePermission) {
+                
+                if(weakSelf.errorLabel) {
                     [weakSelf.errorLabel removeFromSuperview];
+                }
                 
                 UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
                 label.text = @"We need permission for the camera.\nPlease go to your settings.";
@@ -89,7 +96,7 @@
     // ----- camera buttons -------- //
     
     // snap button to capture image
-    self.snapButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.snapButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.snapButton.frame = CGRectMake(0, 0, 70.0f, 70.0f);
     self.snapButton.clipsToBounds = YES;
     self.snapButton.layer.cornerRadius = self.snapButton.width / 2.0f;
@@ -102,21 +109,34 @@
     [self.view addSubview:self.snapButton];
     
     // button to toggle flash
-    self.flashButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.flashButton = [UIButton buttonWithType:UIButtonTypeSystem];
     self.flashButton.frame = CGRectMake(0, 0, 16.0f + 20.0f, 24.0f + 20.0f);
-    [self.flashButton setImage:[UIImage imageNamed:@"camera-flash-off.png"] forState:UIControlStateNormal];
-    [self.flashButton setImage:[UIImage imageNamed:@"camera-flash-on.png"] forState:UIControlStateSelected];
+    self.flashButton.tintColor = [UIColor whiteColor];
+    [self.flashButton setImage:[UIImage imageNamed:@"camera-flash.png"] forState:UIControlStateNormal];
     self.flashButton.imageEdgeInsets = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
     [self.flashButton addTarget:self action:@selector(flashButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.flashButton];
     
     // button to toggle camera positions
-    self.switchButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.switchButton = [UIButton buttonWithType:UIButtonTypeSystem];
     self.switchButton.frame = CGRectMake(0, 0, 29.0f + 20.0f, 22.0f + 20.0f);
+    self.switchButton.tintColor = [UIColor whiteColor];
     [self.switchButton setImage:[UIImage imageNamed:@"camera-switch.png"] forState:UIControlStateNormal];
     self.switchButton.imageEdgeInsets = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
     [self.switchButton addTarget:self action:@selector(switchButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.switchButton];
+    
+    
+    self.segmentedControl = [[UISegmentedControl alloc] initWithItems:@[@"Picture",@"Video"]];
+    self.segmentedControl.frame = CGRectMake(12.0f, screenRect.size.height - 67.0f, 120.0f, 32.0f);
+    self.segmentedControl.selectedSegmentIndex = 0;
+    self.segmentedControl.tintColor = [UIColor whiteColor];
+    [self.segmentedControl addTarget:self action:@selector(segmentedControlValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:self.segmentedControl];
+}
+
+- (void)segmentedControlValueChanged:(UISegmentedControl *)control {
+    NSLog(@"Segment value changed!");
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -139,40 +159,78 @@
     [self.camera togglePosition];
 }
 
+- (NSURL *)applicationDocumentsDirectory {
+    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
+                                                   inDomains:NSUserDomainMask] lastObject];
+}
+
 - (void)flashButtonPressed:(UIButton *)button {
     
     if(self.camera.flash == CameraFlashOff) {
         BOOL done = [self.camera updateFlashMode:CameraFlashOn];
         if(done) {
             self.flashButton.selected = YES;
+            self.flashButton.tintColor = [UIColor yellowColor];
         }
     }
     else {
         BOOL done = [self.camera updateFlashMode:CameraFlashOff];
         if(done) {
             self.flashButton.selected = NO;
+            self.flashButton.tintColor = [UIColor whiteColor];
         }
     }
 }
 
 - (void)snapButtonPressed:(UIButton *)button {
     
-    // capture
-    [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
-        if(!error) {
+    if(self.segmentedControl.selectedSegmentIndex == 0) {
+        // capture
+        [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
+            if(!error) {
+                
+                // we should stop the camera, since we don't need it anymore. We will open a new vc.
+                // this very important, otherwise you may experience memory crashes
+                [camera stop];
+                
+                // show the image
+                ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
+                [self presentViewController:imageVC animated:NO completion:nil];
+            }
+            else {
+                NSLog(@"An error has occured: %@", error);
+            }
+        } exactSeenImage:YES];
+    }
+    else {
+        
+        if(!self.camera.isRecording) {
+            self.segmentedControl.hidden = YES;
+            self.flashButton.hidden = YES;
+            self.switchButton.hidden = YES;
             
-            // we should stop the camera, since we don't need it anymore. We will open a new vc.
-            // this very important, otherwise you may experience memory crashes
-            [camera stop];
+            self.snapButton.layer.borderColor = [UIColor redColor].CGColor;
+            self.snapButton.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.5];
             
-            // show the image
-            ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
-            [self presentViewController:imageVC animated:NO completion:nil];
+            // start recording
+            NSURL *outputURL = [[[self applicationDocumentsDirectory]
+                                 URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
+            [self.camera startRecordingWithOutputUrl:outputURL];
         }
         else {
-            NSLog(@"An error has occured: %@", error);
+            self.segmentedControl.hidden = NO;
+            self.flashButton.hidden = NO;
+            self.switchButton.hidden = NO;
+            
+            self.snapButton.layer.borderColor = [UIColor whiteColor].CGColor;
+            self.snapButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.5];
+            
+            [self.camera stopRecording:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
+                VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
+                [self.navigationController pushViewController:vc animated:YES];
+            }];
         }
-    } exactSeenImage:YES];
+    }
 }
 
 /* other lifecycle methods */
