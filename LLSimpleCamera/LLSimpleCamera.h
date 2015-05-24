@@ -1,9 +1,9 @@
 //
 //  CameraViewController.h
-//  Frizzbee
+//  LLSimpleCamera
 //
 //  Created by Ömer Faruk Gül on 24/10/14.
-//  Copyright (c) 2014 Louvre Digital. All rights reserved.
+//  Copyright (c) 2014 Ömer Farul Gül. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -25,7 +25,8 @@ extern NSString *const LLSimpleCameraErrorDomain;
 typedef enum : NSUInteger {
     LLSimpleCameraErrorCodeCameraPermission = 10,
     LLSimpleCameraErrorCodeMicrophonePermission = 11,
-    LLSimpleCameraErrorCodeSession = 12
+    LLSimpleCameraErrorCodeSession = 12,
+    LLSimpleCameraErrorCodeVideoNotEnabled = 13
 } LLSimpleCameraErrorCode;
 
 @interface LLSimpleCamera : UIViewController
@@ -39,6 +40,12 @@ typedef enum : NSUInteger {
  * Triggered on any kind of error.
  */
 @property (nonatomic, copy) void (^onError)(LLSimpleCamera *camera, NSError *error);
+
+/**
+ * Camera quality, set a constants prefixed with AVCaptureSessionPreset.
+ * Make sure to call before calling -(void)initialize method, otherwise it would be late.
+ */
+@property (copy, nonatomic) NSString *cameraQuality;
 
 /**
  * Camera flash mode.
@@ -109,8 +116,28 @@ typedef enum : NSUInteger {
  */
 - (void)stop;
 
+/**
+ * Capture an image.
+ * @param onCapture a block triggered after the capturing the photo.
+ * @param exactSeenImage If set YES, then the image is cropped to the exact size as the preview. So you get exactly what you see.
+ */
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage;
+
+/**
+ * Capture an image.
+ * @param onCapture a block triggered after the capturing the photo.
+ */
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
+
+/*
+ * Start recording a video. Video is saved to the given url.
+ */
 - (void)startRecordingWithOutputUrl:(NSURL *)url;
-- (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))didRecord;
+
+/**
+ * Stop recording video with a completion block.
+ */
+- (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock;
 
 /**
  * Attaches the LLSimpleCamera to another view controller with a frame. It basically adds the LLSimpleCamera as a
@@ -146,19 +173,5 @@ typedef enum : NSUInteger {
  * @param animation to be applied after the layer is shown
  */
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
-
-/**
- * Capture the image.
- * @param onCapture a block triggered after the capturing the photo.
- * @param exactSeenImage If set YES, then the image is cropped to the exact size as the preview. So you get exactly what you see.
- */
--(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage;
-
-/**
- * Capture the image.
- * @param onCapture a block triggered after the capturing the photo.
- */
--(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
-
 
 @end

@@ -1,9 +1,9 @@
 //
 //  CameraViewController.m
-//  Frizzbee
+//  LLSimpleCamera
 //
 //  Created by Ömer Faruk Gül on 24/10/14.
-//  Copyright (c) 2014 Louvre Digital. All rights reserved.
+//  Copyright (c) 2014 Ömer Faruk Gül. All rights reserved.
 //
 
 #import "LLSimpleCamera.h"
@@ -11,7 +11,6 @@
 #import "UIImage+FixOrientation.h"
 
 @interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate>
-@property (copy, nonatomic) NSString *cameraQuality;
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
@@ -40,7 +39,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 }
 
 - (instancetype)initWithVideoEnabled:(BOOL)videoEnabled {
-    self = [self initWithQuality:AVCaptureSessionPresetHigh position:CameraPositionBack videoEnabled:NO];
+    self = [self initWithQuality:AVCaptureSessionPresetHigh position:CameraPositionBack videoEnabled:videoEnabled];
     if(self) {
     }
     
@@ -217,7 +216,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             [self.session  addInput:_videoDeviceInput];
         }
         
-        // audio
+        // add audio if video is enabled
         if(self.videoEnabled) {
             _audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
             _audioDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:_audioCaptureDevice error:&error];
@@ -314,6 +313,19 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 #pragma mark Video Methods
 
 - (void)startRecordingWithOutputUrl:(NSURL *)url {
+    
+    // check if video is enabled
+    if(!self.videoEnabled) {
+        NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
+                                             code:LLSimpleCameraErrorCodeVideoNotEnabled
+                                         userInfo:nil];
+        if(self.onError) {
+            self.onError(self, error);
+        }
+        
+        return;
+    }
+    
     if(self.flash == CameraFlashOn) {
         [self enableTorch:YES];
     }
@@ -321,6 +333,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 }
 
 - (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock {
+    
+    if(!self.videoEnabled) {
+        return;
+    }
+    
     self.didRecord = completionBlock;
     [self.movieFileOutput stopRecording];
 }
