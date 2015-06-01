@@ -4,6 +4,8 @@
 
 LLSimpleCamera is a library for creating a customized camera - video recorder screens similar to snapchat's. You don't have to present the camera in a new view controller.
 
+You can also use my [LLVideoEditor][1] library to easily edit recorded videos.
+
 ###LLSimpleCamera:###
 * lets you easily capture photos and record videos (finally)
 * handles the position and flash of the camera
@@ -120,5 +122,5 @@ Some significant changes have been made at both internal structure and  api.
 - fixed a problem that sometimes caused a crash after capturing a photo.
 - improved code structure, didChangeDevice delegate is now also triggered for the first default device.
 
-
+[1]: http://github.com/omergul123/LLVideoEditor
 [2]: http://omerfarukgul.com
