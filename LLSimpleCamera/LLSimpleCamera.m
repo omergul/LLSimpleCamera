@@ -86,7 +86,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 	//pinch to zoom
 	if (_zoomingEnabled)
 	{
-		self.pinchGesture = [[UIPinchGestureRecognizer alloc] init];
+		self.pinchGesture = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinchGesture:)];
 		self.pinchGesture.delegate = self;
 		[self.preview addGestureRecognizer:self.pinchGesture];
 	}
