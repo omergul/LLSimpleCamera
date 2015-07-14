@@ -231,6 +231,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             }
         
             _movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
+            [_movieFileOutput setMovieFragmentInterval:kCMTimeInvalid];
             if([self.session canAddOutput:_movieFileOutput]) {
                 [self.session addOutput:_movieFileOutput];
             }
