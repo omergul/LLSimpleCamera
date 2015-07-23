@@ -697,7 +697,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
     }
     else {
-        switch (self.interfaceOrientation) {
+        switch ([[UIApplication sharedApplication] statusBarOrientation]) {
             case UIInterfaceOrientationLandscapeLeft:
                 videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
                 break;
