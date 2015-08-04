@@ -313,7 +313,23 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 #pragma mark Video Methods
 
 - (void)startRecordingWithOutputUrl:(NSURL *)url {
+    AVCaptureConnection *videoConnection = nil;
     
+    for ( AVCaptureConnection *connection in [self.movieFileOutput connections] )
+    {
+        for ( AVCaptureInputPort *port in [connection inputPorts] )
+        {
+            if ( [[port mediaType] isEqual:AVMediaTypeVideo] )
+            {
+                videoConnection = connection;
+            }
+        }
+    }
+    if([videoConnection isVideoOrientationSupported])
+    {
+        [videoConnection setVideoOrientation:[self orientationForConnection]];
+    }
+
     // check if video is enabled
     if(!self.videoEnabled) {
         NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
