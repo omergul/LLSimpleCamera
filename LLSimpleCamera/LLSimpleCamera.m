@@ -10,7 +10,7 @@
 #import <ImageIO/CGImageProperties.h>
 #import "UIImage+FixOrientation.h"
 
-@interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate>
+@interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate, UIGestureRecognizerDelegate>
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
@@ -20,10 +20,14 @@
 @property (strong, nonatomic) AVCaptureDeviceInput *audioDeviceInput;
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @property (strong, nonatomic) UITapGestureRecognizer *tapGesture;
+@property (strong, nonatomic) UIPinchGestureRecognizer *pinchGesture;
 @property (strong, nonatomic) CALayer *focusBoxLayer;
 @property (strong, nonatomic) CAAnimation *focusBoxAnimation;
 @property (strong, nonatomic) AVCaptureMovieFileOutput *movieFileOutput;
 @property (nonatomic, copy) void (^didRecord)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
+
+@property (nonatomic) CGFloat beginGestureScale;
+@property (nonatomic) CGFloat effectiveScale;
 @end
 
 NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
@@ -54,9 +58,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         _fixOrientationAfterCapture = NO;
         _tapToFocus = YES;
         _useDeviceOrientation = NO;
-        _flash = CameraFlashOff;
+        _flash = CameraFlashAuto;
         _videoEnabled = videoEnabled;
         _recording = NO;
+		_zoomingEnabled = YES;
+		_effectiveScale = 1.0;
     }
     
     return self;
@@ -77,7 +83,15 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.tapGesture.numberOfTapsRequired = 1;
     [self.tapGesture setDelaysTouchesEnded:NO];
     [self.preview addGestureRecognizer:self.tapGesture];
-    
+	
+	//pinch to zoom
+	if (_zoomingEnabled)
+	{
+		self.pinchGesture = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinchGesture:)];
+		self.pinchGesture.delegate = self;
+		[self.preview addGestureRecognizer:self.pinchGesture];
+	}
+		
     // add focus box to view
     [self addDefaultFocusBox];
 }
@@ -751,6 +765,49 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             });
         }];
     }
+}
+
+#pragma mark - Gesture recognizers
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+	if ( [gestureRecognizer isKindOfClass:[UIPinchGestureRecognizer class]] ) {
+		_beginGestureScale = _effectiveScale;
+	}
+	return YES;
+}
+
+// scale image depending on users pinch gesture
+- (IBAction)handlePinchGesture:(UIPinchGestureRecognizer *)recognizer
+{
+	BOOL allTouchesAreOnThePreviewLayer = YES;
+	NSUInteger numTouches = [recognizer numberOfTouches], i;
+	for ( i = 0; i < numTouches; ++i ) {
+		CGPoint location = [recognizer locationOfTouch:i inView:self.preview];
+		CGPoint convertedLocation = [self.preview.layer convertPoint:location fromLayer:self.view.layer];
+		if ( ! [self.preview.layer containsPoint:convertedLocation] ) {
+			allTouchesAreOnThePreviewLayer = NO;
+			break;
+		}
+	}
+	
+	if ( allTouchesAreOnThePreviewLayer ) {
+		_effectiveScale = _beginGestureScale * recognizer.scale;
+		if (_effectiveScale < 1.0)
+			_effectiveScale = 1.0;
+		NSError *error = nil;
+		if ([_videoCaptureDevice lockForConfiguration:&error])
+		{
+			[_videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:10];
+			
+			[_videoCaptureDevice unlockForConfiguration];
+		}
+		else
+		{
+			NSLog(@"%@", error);
+		}
+		
+	}
 }
 
 @end

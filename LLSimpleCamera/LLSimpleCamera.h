@@ -68,6 +68,11 @@ typedef enum : NSUInteger {
 @property (nonatomic, getter=isRecording) BOOL recording;
 
 /**
+ * Boolean value to indicate if zooming is enabled.
+ */
+@property (nonatomic, getter=isZoomingEnabled) BOOL zoomingEnabled;
+
+/**
  * Fixess the orientation after the image is captured is set to Yes.
  * see: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
  */
