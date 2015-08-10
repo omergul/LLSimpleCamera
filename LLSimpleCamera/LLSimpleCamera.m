@@ -58,10 +58,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         _fixOrientationAfterCapture = NO;
         _tapToFocus = YES;
         _useDeviceOrientation = NO;
-        _flash = CameraFlashOff;
+        _flash = CameraFlashAuto;
         _videoEnabled = videoEnabled;
         _recording = NO;
 		_zoomingEnabled = YES;
+		_effectiveScale = 1.0;
     }
     
     return self;
@@ -794,13 +795,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 		_effectiveScale = _beginGestureScale * recognizer.scale;
 		if (_effectiveScale < 1.0)
 			_effectiveScale = 1.0;
-		//        CGFloat maxScaleAndCropFactor = [[self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo] videoMaxScaleAndCropFactor];
-		//        if (effectiveScale > maxScaleAndCropFactor)
-		//            effectiveScale = maxScaleAndCropFactor;
-		//        [CATransaction begin];
-		//        [CATransaction setAnimationDuration:.025];
-		//        [viewLayer setAffineTransform:CGAffineTransformMakeScale(effectiveScale, effectiveScale)];
-		//        [CATransaction commit];
 		NSError *error = nil;
 		if ([_videoCaptureDevice lockForConfiguration:&error])
 		{
