@@ -26,8 +26,8 @@
 @property (strong, nonatomic) AVCaptureMovieFileOutput *movieFileOutput;
 @property (nonatomic, copy) void (^didRecord)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
 
-@property (nonatomic) CGFloat beginGestureScale;
-@property (nonatomic) CGFloat effectiveScale;
+@property (nonatomic, assign) CGFloat beginGestureScale;
+@property (nonatomic, assign) CGFloat effectiveScale;
 @end
 
 NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
@@ -61,8 +61,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 		_flash = CameraFlashAuto;
 		_videoEnabled = videoEnabled;
 		_recording = NO;
-		_zoomingEnabled = YES;
-		_effectiveScale = 1.0;
+		_zoomingEnabled = YES; // Enable zooming by default
+		_effectiveScale = 1.0f; //init effective scale to 1.0
+		_maxScale = 10.0f; //set maxScale to limit scaling range
 	}
 	
 	return self;
@@ -793,12 +794,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 	
 	if ( allTouchesAreOnThePreviewLayer ) {
 		_effectiveScale = _beginGestureScale * recognizer.scale;
-		if (_effectiveScale < 1.0)
-			_effectiveScale = 1.0;
+		if (_effectiveScale < 1.0f)
+			_effectiveScale = 1.0f;
+		if (_effectiveScale > _maxScale)
+			_effectiveScale = _maxScale;
 		NSError *error = nil;
 		if ([_videoCaptureDevice lockForConfiguration:&error])
 		{
-			[_videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:10];
+			[_videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:20];
 			
 			[_videoCaptureDevice unlockForConfiguration];
 		}
