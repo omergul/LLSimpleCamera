@@ -10,23 +10,23 @@
 #import <AVFoundation/AVFoundation.h>
 
 typedef enum : NSUInteger {
-    CameraPositionBack,
-    CameraPositionFront
+	CameraPositionBack,
+	CameraPositionFront
 } CameraPosition;
 
 typedef enum : NSUInteger {
-    // The default state has to be off
-    CameraFlashOff,
-    CameraFlashOn,
-    CameraFlashAuto
+	// The default state has to be off
+	CameraFlashOff,
+	CameraFlashOn,
+	CameraFlashAuto
 } CameraFlash;
 
 extern NSString *const LLSimpleCameraErrorDomain;
 typedef enum : NSUInteger {
-    LLSimpleCameraErrorCodeCameraPermission = 10,
-    LLSimpleCameraErrorCodeMicrophonePermission = 11,
-    LLSimpleCameraErrorCodeSession = 12,
-    LLSimpleCameraErrorCodeVideoNotEnabled = 13
+	LLSimpleCameraErrorCodeCameraPermission = 10,
+	LLSimpleCameraErrorCodeMicrophonePermission = 11,
+	LLSimpleCameraErrorCodeSession = 12,
+	LLSimpleCameraErrorCodeVideoNotEnabled = 13
 } LLSimpleCameraErrorCode;
 
 @interface LLSimpleCamera : UIViewController
@@ -66,6 +66,16 @@ typedef enum : NSUInteger {
  * Boolean value to indicate if the camera is recording a video at the current moment.
  */
 @property (nonatomic, getter=isRecording) BOOL recording;
+
+/**
+ * Boolean value to indicate if zooming is enabled.
+ */
+@property (nonatomic, getter=isZoomingEnabled) BOOL zoomingEnabled;
+
+/**
+ * Float value to set maximum scaling factor
+ */
+@property (nonatomic, assign) CGFloat maxScale;
 
 /**
  * Fixess the orientation after the image is captured is set to Yes.
