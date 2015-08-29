@@ -15,9 +15,7 @@
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
 @property (strong, nonatomic) AVCaptureDevice *videoCaptureDevice;
-@property (strong, nonatomic) AVCaptureDevice *audioCaptureDevice;
 @property (strong, nonatomic) AVCaptureDeviceInput *videoDeviceInput;
-@property (strong, nonatomic) AVCaptureDeviceInput *audioDeviceInput;
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @property (strong, nonatomic) UITapGestureRecognizer *tapGesture;
 @property (strong, nonatomic) CALayer *focusBoxLayer;
@@ -138,25 +136,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)start {
     [LLSimpleCamera requestCameraPermission:^(BOOL granted) {
         if(granted) {
-            // request microphone permission if video is enabled
-            if(self.videoEnabled) {
-                [LLSimpleCamera requestMicrophonePermission:^(BOOL granted) {
-                    if(granted) {
-                        [self initialize];
-                    }
-                    else {
-                        NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
-                                                             code:LLSimpleCameraErrorCodeMicrophonePermission
-                                                         userInfo:nil];
-                        if(self.onError) {
-                            self.onError(self, error);
-                        }
-                    }
-                }];
-            }
-            else {
-                [self initialize];
-            }
+            [self initialize];
         }
         else {
             NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
@@ -216,20 +196,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             [self.session  addInput:_videoDeviceInput];
         }
         
-        // add audio if video is enabled
         if(self.videoEnabled) {
-            _audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
-            _audioDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:_audioCaptureDevice error:&error];
-            if (!_audioDeviceInput) {
-                if(self.onError) {
-                    self.onError(self, error);
-                }
-            }
-        
-            if([self.session canAddInput:_audioDeviceInput]) {
-                [self.session addInput:_audioDeviceInput];
-            }
-        
             _movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
             if([self.session canAddOutput:_movieFileOutput]) {
                 [self.session addOutput:_movieFileOutput];
@@ -759,18 +726,4 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
     
 }
-
-+ (void)requestMicrophonePermission:(void (^)(BOOL granted))completionBlock {
-    if([[AVAudioSession sharedInstance] respondsToSelector:@selector(requestRecordPermission:)]) {
-        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
-            // return to main thread
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if(completionBlock) {
-                    completionBlock(granted);
-                }
-            });
-        }];
-    }
-}
-
 @end
