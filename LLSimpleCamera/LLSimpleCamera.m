@@ -329,6 +329,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     if(self.flash == CameraFlashOn) {
         [self enableTorch:YES];
     }
+    
+    [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo].videoOrientation = [self orientationForConnection];
+    
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
 }
 
