@@ -21,6 +21,13 @@ typedef enum : NSUInteger {
     CameraFlashAuto
 } CameraFlash;
 
+typedef enum : NSUInteger {
+    // The default state has to be off
+    CameraMirrorOff,
+    CameraMirrorOn,
+    CameraMirrorAuto
+} CameraMirror;
+
 extern NSString *const LLSimpleCameraErrorDomain;
 typedef enum : NSUInteger {
     LLSimpleCameraErrorCodeCameraPermission = 10,
@@ -51,6 +58,11 @@ typedef enum : NSUInteger {
  * Camera flash mode.
  */
 @property (nonatomic, readonly) CameraFlash flash;
+
+/**
+ * Camera mirror mode.
+ */
+@property (nonatomic) CameraMirror mirror;
 
 /**
  * Position of the camera.
