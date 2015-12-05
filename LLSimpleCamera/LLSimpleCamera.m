@@ -721,7 +721,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     // Dispose of any resources that can be recreated.
 }
 
-
 #pragma mark static methods
 
 + (void)requestCameraPermission:(void (^)(BOOL granted))completionBlock {
@@ -751,6 +750,16 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             });
         }];
     }
+}
+
++ (BOOL)isFrontCameraAvailable
+{
+    return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
+}
+
++ (BOOL)isRearCameraAvailable
+{
+    return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
 }
 
 @end

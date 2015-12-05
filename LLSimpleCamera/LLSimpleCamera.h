@@ -174,4 +174,13 @@ typedef enum : NSUInteger {
  */
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
+/**
+ * Checks is the front camera is available.
+ */
++ (BOOL)isFrontCameraAvailable;
+
+/**
+ * Checks is the rear camera is available.
+ */
++ (BOOL)isRearCameraAvailable;
 @end
