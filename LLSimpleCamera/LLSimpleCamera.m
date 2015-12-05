@@ -185,10 +185,20 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         AVCaptureDevicePosition devicePosition;
         switch (self.position) {
             case LLCameraPositionRear:
-                devicePosition = AVCaptureDevicePositionBack;
+                if([self.class isRearCameraAvailable]) {
+                    devicePosition = AVCaptureDevicePositionBack;
+                } else {
+                    devicePosition = AVCaptureDevicePositionFront;
+                    _position = LLCameraPositionFront;
+                }
                 break;
             case LLCameraPositionFront:
-                devicePosition = AVCaptureDevicePositionFront;
+                if([self.class isFrontCameraAvailable]) {
+                    devicePosition = AVCaptureDevicePositionFront;
+                } else {
+                    devicePosition = AVCaptureDevicePositionBack;
+                    _position = LLCameraPositionRear;
+                }
                 break;
             default:
                 devicePosition = AVCaptureDevicePositionUnspecified;
@@ -495,6 +505,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)setCameraPosition:(LLCameraPosition)cameraPosition
 {
     if(_position == cameraPosition || !self.session) {
+        return;
+    }
+    
+    if(cameraPosition == LLCameraPositionRear && ![self.class isRearCameraAvailable]) {
+        return;
+    }
+    
+    if(cameraPosition == LLCameraPositionFront && ![self.class isFrontCameraAvailable]) {
         return;
     }
     
