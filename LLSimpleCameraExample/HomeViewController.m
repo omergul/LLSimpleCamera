@@ -34,7 +34,7 @@
     
     // create camera vc
     self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
-                                                 position:CameraPositionBack
+                                                 position:LLCameraPositionRear
                                              videoEnabled:YES];
     
     // attach to a view controller
@@ -54,7 +54,7 @@
         if([camera isFlashAvailable]) {
             weakSelf.flashButton.hidden = NO;
             
-            if(camera.flash == CameraFlashOff) {
+            if(camera.flash == LLCameraFlashOff) {
                 weakSelf.flashButton.selected = NO;
             }
             else {
@@ -165,15 +165,15 @@
 
 - (void)flashButtonPressed:(UIButton *)button {
     
-    if(self.camera.flash == CameraFlashOff) {
-        BOOL done = [self.camera updateFlashMode:CameraFlashOn];
+    if(self.camera.flash == LLCameraFlashOff) {
+        BOOL done = [self.camera updateFlashMode:LLCameraFlashOn];
         if(done) {
             self.flashButton.selected = YES;
             self.flashButton.tintColor = [UIColor yellowColor];
         }
     }
     else {
-        BOOL done = [self.camera updateFlashMode:CameraFlashOff];
+        BOOL done = [self.camera updateFlashMode:LLCameraFlashOff];
         if(done) {
             self.flashButton.selected = NO;
             self.flashButton.tintColor = [UIColor whiteColor];

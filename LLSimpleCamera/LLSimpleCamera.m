@@ -39,14 +39,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 }
 
 - (instancetype)initWithVideoEnabled:(BOOL)videoEnabled {
-    self = [self initWithQuality:AVCaptureSessionPresetHigh position:CameraPositionBack videoEnabled:videoEnabled];
+    self = [self initWithQuality:AVCaptureSessionPresetHigh position:LLCameraPositionRear videoEnabled:videoEnabled];
     if(self) {
     }
     
     return self;
 }
 
-- (instancetype)initWithQuality:(NSString *)quality position:(CameraPosition)position videoEnabled:(BOOL)videoEnabled {
+- (instancetype)initWithQuality:(NSString *)quality position:(LLCameraPosition)position videoEnabled:(BOOL)videoEnabled {
     self = [super initWithNibName:nil bundle:nil];
     if(self) {
         _cameraQuality = quality;
@@ -54,7 +54,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         _fixOrientationAfterCapture = NO;
         _tapToFocus = YES;
         _useDeviceOrientation = NO;
-        _flash = CameraFlashOff;
+        _flash = LLCameraFlashOff;
         _videoEnabled = videoEnabled;
         _recording = NO;
     }
@@ -184,10 +184,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         AVCaptureDevicePosition devicePosition;
         switch (self.position) {
-            case CameraPositionBack:
+            case LLCameraPositionRear:
                 devicePosition = AVCaptureDevicePositionBack;
                 break;
-            case CameraPositionFront:
+            case LLCameraPositionFront:
                 devicePosition = AVCaptureDevicePositionFront;
                 break;
             default:
@@ -326,7 +326,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         return;
     }
     
-    if(self.flash == CameraFlashOn) {
+    if(self.flash == LLCameraFlashOn) {
         [self enableTorch:YES];
     }
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
@@ -413,16 +413,16 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _videoCaptureDevice = videoCaptureDevice;
     
     if(videoCaptureDevice.flashMode == AVCaptureFlashModeAuto) {
-        _flash = CameraFlashAuto;
+        _flash = LLCameraFlashAuto;
     }
     else if(videoCaptureDevice.flashMode == AVCaptureFlashModeOn) {
-        _flash = CameraFlashOn;
+        _flash = LLCameraFlashOn;
     }
     else if(videoCaptureDevice.flashMode == AVCaptureFlashModeOff) {
-        _flash = CameraFlashOff;
+        _flash = LLCameraFlashOff;
     }
     else {
-        _flash = CameraFlashOff;
+        _flash = LLCameraFlashOff;
     }
     
     // trigger block
@@ -439,16 +439,16 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     return self.videoCaptureDevice.hasTorch && self.videoCaptureDevice.isTorchAvailable;
 }
 
-- (BOOL)updateFlashMode:(CameraFlash)cameraFlash {
+- (BOOL)updateFlashMode:(LLCameraFlash)cameraFlash {
     if(!self.session)
         return NO;
     
     AVCaptureFlashMode flashMode;
     
-    if(cameraFlash == CameraFlashOn) {
+    if(cameraFlash == LLCameraFlashOn) {
         flashMode = AVCaptureFlashModeOn;
     }
-    else if(cameraFlash == CameraFlashAuto) {
+    else if(cameraFlash == LLCameraFlashAuto) {
         flashMode = AVCaptureFlashModeAuto;
     }
     else {
@@ -477,22 +477,22 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
-- (CameraPosition)togglePosition {
+- (LLCameraPosition)togglePosition {
     if(!self.session) {
         return self.position;
     }
     
-    if(self.position == CameraPositionBack) {
-        self.cameraPosition = CameraPositionFront;
+    if(self.position == LLCameraPositionRear) {
+        self.cameraPosition = LLCameraPositionFront;
     }
     else {
-        self.cameraPosition = CameraPositionBack;
+        self.cameraPosition = LLCameraPositionRear;
     }
     
     return self.position;
 }
 
-- (void)setCameraPosition:(CameraPosition)cameraPosition
+- (void)setCameraPosition:(LLCameraPosition)cameraPosition
 {
     if(_position == cameraPosition || !self.session) {
         return;
