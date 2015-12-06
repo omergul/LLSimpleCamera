@@ -88,7 +88,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     [vc addChildViewController:self];
     [self didMoveToParentViewController:vc];
     
-    vc.view.frame = frame;
+    self.view.frame = frame;
 }
 
 - (void)start
