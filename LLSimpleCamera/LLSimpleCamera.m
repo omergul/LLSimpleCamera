@@ -303,27 +303,20 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         [self enableTorch:YES];
     }
     
-    // Capture all the open connections
-    AVCaptureConnection *videoConnection = nil;
-    
-    for ( AVCaptureConnection *connection in [self.movieFileOutput connections] )
-    {
-        for ( AVCaptureInputPort *port in [connection inputPorts] )
-        {
+    // set video orientation
+    for(AVCaptureConnection *connection in [self.movieFileOutput connections]) {
+        for (AVCaptureInputPort *port in [connection inputPorts]) {
             // get only the video media types
-            if ( [[port mediaType] isEqual:AVMediaTypeVideo] )
-            {
-                videoConnection = connection;
+            if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
+                if([connection isVideoOrientationSupported]) {
+                    [connection setVideoOrientation:[self orientationForConnection]];
+                }
             }
         }
     }
     
-    if([videoConnection isVideoOrientationSupported]) // **Here it is, its always false**
-    {
-        [videoConnection setVideoOrientation:[[UIDevice currentDevice] orientation]];
-    }
-    
-    [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];}
+    [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
+}
 
 - (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock
 {
