@@ -311,7 +311,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
          
          // trigger the block
          if(onCapture) {
-             onCapture(self, image, metadata, error);
+             dispatch_async(dispatch_get_main_queue(), ^{
+                onCapture(self, image, metadata, error);
+             });
          }
      }];
 }
@@ -737,6 +739,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (void)dealloc {
+    [self stop];
 }
 
 #pragma mark static methods
