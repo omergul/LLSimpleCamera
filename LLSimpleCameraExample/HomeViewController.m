@@ -242,13 +242,16 @@
     self.camera.view.frame = self.view.contentBounds;
     
     self.snapButton.center = self.view.contentCenter;
-    self.snapButton.bottom = self.view.height - 15;
+    self.snapButton.bottom = self.view.height - 15.0f;
     
     self.flashButton.center = self.view.contentCenter;
     self.flashButton.top = 5.0f;
     
     self.switchButton.top = 5.0f;
     self.switchButton.right = self.view.width - 5.0f;
+    
+    self.segmentedControl.left = 12.0f;
+    self.segmentedControl.bottom = self.view.height - 35.0f;
 }
 
 - (BOOL)prefersStatusBarHidden
