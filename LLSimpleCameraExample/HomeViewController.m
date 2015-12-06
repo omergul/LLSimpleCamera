@@ -147,13 +147,6 @@
     [self.camera start];
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-
-    // stop the camera
-    [self.camera stop];
-}
-
 /* camera button methods */
 
 - (void)switchButtonPressed:(UIButton *)button {
@@ -185,18 +178,21 @@
 
 - (void)snapButtonPressed:(UIButton *)button {
     
+    __weak typeof(self) weakSelf = self;
+    
     if(self.segmentedControl.selectedSegmentIndex == 0) {
         // capture
         [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
             if(!error) {
                 
-                // we should stop the camera, since we don't need it anymore. We will open a new vc.
-                // this very important, otherwise you may experience memory crashes
-                [camera stop];
+                // We should stop the camera, we are opening a new vc, thus we don't need it anymore.
+                // This is important, otherwise you may experience memory crashes.
+                // Camera is started again at viewWillAppear after the user comes back to this view.
+                // I put the delay, because in iOS9 the shutter sound gets interrupted if we call it directly.
+                [camera performSelector:@selector(stop) withObject:nil afterDelay:0.2];
                 
-                // show the image
                 ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
-                [self presentViewController:imageVC animated:NO completion:nil];
+                [weakSelf presentViewController:imageVC animated:NO completion:nil];
             }
             else {
                 NSLog(@"An error has occured: %@", error);
@@ -235,6 +231,7 @@
 }
 
 /* other lifecycle methods */
+
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
     
