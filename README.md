@@ -19,7 +19,7 @@ pod 'LLSimpleCamera', '~> 3.0'
 ## Example usage
 
 Initialize the LLSimpleCamera
-````
+```objective-c
 CGRect screenRect = [[UIScreen mainScreen] bounds];
 
 // create camera with standard settings
@@ -35,10 +35,10 @@ self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
 // attach to the view
 [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
 
-````
+```
 
 To capture a photo:
-````
+```objective-c
 // capture
 [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
     if(!error) {    
@@ -51,28 +51,28 @@ To capture a photo:
         [self presentViewController:imageVC animated:NO completion:nil];
        }
 }];
-````
+```
 
 To start recording a video:
-````
+```objective-c
 // start recording
 NSURL *outputURL = [[[self applicationDocumentsDirectory]
                      URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
 [self.camera startRecordingWithOutputUrl:outputURL];
-````
+```
 
 To stop recording the video:
-````
+```objective-c
 [self.camera stopRecording:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
     VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
     [self.navigationController pushViewController:vc animated:YES];
 }];
-````
+```
 
 Changing the focus layer and animation:
-````
+```objective-c
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
-````
+```
 
 ## Adding the camera controls
 
