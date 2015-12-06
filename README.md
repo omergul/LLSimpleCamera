@@ -7,14 +7,17 @@ LLSimpleCamera is a library for creating a customized camera - video recorder sc
 You can also use my [LLVideoEditor][1] library to easily edit recorded videos.
 
 ###LLSimpleCamera:###
-* lets you easily capture photos and record videos (finally)
+* lets you easily capture photos and record videos
 * handles the position and flash of the camera
 * hides the nitty gritty details from the developer
 * doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
+###Version 4.0 notes:###
+Thanks to the open source community, recently I have merged about 10 PR's to make this library much better and reliable. Also I did some cleanups which contains some breaking changes (sorry for that). Therefore I'm incrementing the major version.
+
 ## Install
 
-pod 'LLSimpleCamera', '~> 3.0'
+pod 'LLSimpleCamera', '~> 4.0'
 
 ## Example usage
 
