@@ -26,7 +26,7 @@ CGRect screenRect = [[UIScreen mainScreen] bounds];
 self.camera = [[LLSimpleCamera alloc] init];
 
 // camera with video recording capability
-self.camera =  [[LLSimpleCamera alloc] nitWithVideoEnabled:YES];
+self.camera =  [[LLSimpleCamera alloc] initWithVideoEnabled:YES];
 
 // camera with precise quality, position and video parameters.
 self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh

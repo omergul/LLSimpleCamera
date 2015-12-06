@@ -22,7 +22,8 @@
 
 @implementation HomeViewController
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
     [super viewDidLoad];
 
     self.view.backgroundColor = [UIColor blackColor];
@@ -34,7 +35,7 @@
     
     // create camera vc
     self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
-                                                 position:CameraPositionBack
+                                                 position:LLCameraPositionRear
                                              videoEnabled:YES];
     
     // attach to a view controller
@@ -54,7 +55,7 @@
         if([camera isFlashAvailable]) {
             weakSelf.flashButton.hidden = NO;
             
-            if(camera.flash == CameraFlashOff) {
+            if(camera.flash == LLCameraFlashOff) {
                 weakSelf.flashButton.selected = NO;
             }
             else {
@@ -92,7 +93,7 @@
             }
         }
     }];
-    
+
     // ----- camera buttons -------- //
     
     // snap button to capture image
@@ -117,15 +118,16 @@
     [self.flashButton addTarget:self action:@selector(flashButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.flashButton];
     
-    // button to toggle camera positions
-    self.switchButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.switchButton.frame = CGRectMake(0, 0, 29.0f + 20.0f, 22.0f + 20.0f);
-    self.switchButton.tintColor = [UIColor whiteColor];
-    [self.switchButton setImage:[UIImage imageNamed:@"camera-switch.png"] forState:UIControlStateNormal];
-    self.switchButton.imageEdgeInsets = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
-    [self.switchButton addTarget:self action:@selector(switchButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.switchButton];
-    
+    if([LLSimpleCamera isFrontCameraAvailable] && [LLSimpleCamera isRearCameraAvailable]) {
+        // button to toggle camera positions
+        self.switchButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        self.switchButton.frame = CGRectMake(0, 0, 29.0f + 20.0f, 22.0f + 20.0f);
+        self.switchButton.tintColor = [UIColor whiteColor];
+        [self.switchButton setImage:[UIImage imageNamed:@"camera-switch.png"] forState:UIControlStateNormal];
+        self.switchButton.imageEdgeInsets = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
+        [self.switchButton addTarget:self action:@selector(switchButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:self.switchButton];
+    }
     
     self.segmentedControl = [[UISegmentedControl alloc] initWithItems:@[@"Picture",@"Video"]];
     self.segmentedControl.frame = CGRectMake(12.0f, screenRect.size.height - 67.0f, 120.0f, 32.0f);
@@ -135,46 +137,42 @@
     [self.view addSubview:self.segmentedControl];
 }
 
-- (void)segmentedControlValueChanged:(UISegmentedControl *)control {
+- (void)segmentedControlValueChanged:(UISegmentedControl *)control
+{
     NSLog(@"Segment value changed!");
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+- (void)viewWillAppear:(BOOL)animated
+{
     [super viewWillAppear:animated];
     
     // start the camera
     [self.camera start];
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-
-    // stop the camera
-    [self.camera stop];
-}
-
 /* camera button methods */
 
-- (void)switchButtonPressed:(UIButton *)button {
+- (void)switchButtonPressed:(UIButton *)button
+{
     [self.camera togglePosition];
 }
 
-- (NSURL *)applicationDocumentsDirectory {
-    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
-                                                   inDomains:NSUserDomainMask] lastObject];
+- (NSURL *)applicationDocumentsDirectory
+{
+    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
-- (void)flashButtonPressed:(UIButton *)button {
-    
-    if(self.camera.flash == CameraFlashOff) {
-        BOOL done = [self.camera updateFlashMode:CameraFlashOn];
+- (void)flashButtonPressed:(UIButton *)button
+{
+    if(self.camera.flash == LLCameraFlashOff) {
+        BOOL done = [self.camera updateFlashMode:LLCameraFlashOn];
         if(done) {
             self.flashButton.selected = YES;
             self.flashButton.tintColor = [UIColor yellowColor];
         }
     }
     else {
-        BOOL done = [self.camera updateFlashMode:CameraFlashOff];
+        BOOL done = [self.camera updateFlashMode:LLCameraFlashOff];
         if(done) {
             self.flashButton.selected = NO;
             self.flashButton.tintColor = [UIColor whiteColor];
@@ -182,28 +180,30 @@
     }
 }
 
-- (void)snapButtonPressed:(UIButton *)button {
+- (void)snapButtonPressed:(UIButton *)button
+{
+    __weak typeof(self) weakSelf = self;
     
     if(self.segmentedControl.selectedSegmentIndex == 0) {
         // capture
         [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
             if(!error) {
                 
-                // we should stop the camera, since we don't need it anymore. We will open a new vc.
-                // this very important, otherwise you may experience memory crashes
-                [camera stop];
+                // We should stop the camera, we are opening a new vc, thus we don't need it anymore.
+                // This is important, otherwise you may experience memory crashes.
+                // Camera is started again at viewWillAppear after the user comes back to this view.
+                // I put the delay, because in iOS9 the shutter sound gets interrupted if we call it directly.
+                [camera performSelector:@selector(stop) withObject:nil afterDelay:0.2];
                 
-                // show the image
                 ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
-                [self presentViewController:imageVC animated:NO completion:nil];
+                [weakSelf presentViewController:imageVC animated:NO completion:nil];
             }
             else {
                 NSLog(@"An error has occured: %@", error);
             }
         } exactSeenImage:YES];
-    }
-    else {
         
+    } else {
         if(!self.camera.isRecording) {
             self.segmentedControl.hidden = YES;
             self.flashButton.hidden = YES;
@@ -216,8 +216,8 @@
             NSURL *outputURL = [[[self applicationDocumentsDirectory]
                                  URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
             [self.camera startRecordingWithOutputUrl:outputURL];
-        }
-        else {
+            
+        } else {
             self.segmentedControl.hidden = NO;
             self.flashButton.hidden = NO;
             self.switchButton.hidden = NO;
@@ -234,7 +234,9 @@
 }
 
 /* other lifecycle methods */
-- (void)viewWillLayoutSubviews {
+
+- (void)viewWillLayoutSubviews
+{
     [super viewWillLayoutSubviews];
     
     self.camera.view.frame = self.view.contentBounds;
@@ -249,15 +251,18 @@
     self.switchButton.right = self.view.width - 5.0f;
 }
 
-- (BOOL)prefersStatusBarHidden {
+- (BOOL)prefersStatusBarHidden
+{
     return YES;
 }
 
-- (UIInterfaceOrientation) preferredInterfaceOrientationForPresentation {
+- (UIInterfaceOrientation) preferredInterfaceOrientationForPresentation
+{
     return UIInterfaceOrientationPortrait;
 }
 
-- (void)didReceiveMemoryWarning {
+- (void)didReceiveMemoryWarning
+{
     [super didReceiveMemoryWarning];
 }
 

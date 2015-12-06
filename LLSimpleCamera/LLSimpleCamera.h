@@ -10,16 +10,16 @@
 #import <AVFoundation/AVFoundation.h>
 
 typedef enum : NSUInteger {
-    CameraPositionBack,
-    CameraPositionFront
-} CameraPosition;
+    LLCameraPositionRear,
+    LLCameraPositionFront
+} LLCameraPosition;
 
 typedef enum : NSUInteger {
     // The default state has to be off
-    CameraFlashOff,
-    CameraFlashOn,
-    CameraFlashAuto
-} CameraFlash;
+    LLCameraFlashOff,
+    LLCameraFlashOn,
+    LLCameraFlashAuto
+} LLCameraFlash;
 
 extern NSString *const LLSimpleCameraErrorDomain;
 typedef enum : NSUInteger {
@@ -50,12 +50,12 @@ typedef enum : NSUInteger {
 /**
  * Camera flash mode.
  */
-@property (nonatomic, readonly) CameraFlash flash;
+@property (nonatomic, readonly) LLCameraFlash flash;
 
 /**
  * Position of the camera.
  */
-@property (nonatomic) CameraPosition position;
+@property (nonatomic) LLCameraPosition position;
 
 /**
  * Boolean value to indicate if the video is enabled.
@@ -98,7 +98,7 @@ typedef enum : NSUInteger {
  * Returns an instance of LLSimpleCamera with the given quality.
  * Quality parameter could be any variable starting with AVCaptureSessionPreset.
  */
-- (instancetype)initWithQuality:(NSString *)quality position:(CameraPosition)position videoEnabled:(BOOL)videoEnabled;
+- (instancetype)initWithQuality:(NSString *)quality position:(LLCameraPosition)position videoEnabled:(BOOL)videoEnabled;
 
 /**
  * Returns an instance of LLSimpleCamera with quality "AVCaptureSessionPresetHigh" and position "CameraPositionBack".
@@ -150,12 +150,12 @@ typedef enum : NSUInteger {
 /**
  * Changes the posiition of the camera (either back or front) and returns the final position.
  */
-- (CameraPosition)togglePosition;
+- (LLCameraPosition)togglePosition;
 
 /**
  * Update the flash mode of the camera. Returns true if it is successful. Otherwise false.
  */
-- (BOOL)updateFlashMode:(CameraFlash)cameraFlash;
+- (BOOL)updateFlashMode:(LLCameraFlash)cameraFlash;
 
 /**
  * Checks if flash is avilable for the currently active device.
@@ -174,4 +174,13 @@ typedef enum : NSUInteger {
  */
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
+/**
+ * Checks is the front camera is available.
+ */
++ (BOOL)isFrontCameraAvailable;
+
+/**
+ * Checks is the rear camera is available.
+ */
++ (BOOL)isRearCameraAvailable;
 @end
