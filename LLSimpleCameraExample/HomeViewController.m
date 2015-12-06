@@ -22,7 +22,8 @@
 
 @implementation HomeViewController
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
     [super viewDidLoad];
 
     self.view.backgroundColor = [UIColor blackColor];
@@ -136,11 +137,13 @@
     [self.view addSubview:self.segmentedControl];
 }
 
-- (void)segmentedControlValueChanged:(UISegmentedControl *)control {
+- (void)segmentedControlValueChanged:(UISegmentedControl *)control
+{
     NSLog(@"Segment value changed!");
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+- (void)viewWillAppear:(BOOL)animated
+{
     [super viewWillAppear:animated];
     
     // start the camera
@@ -149,17 +152,18 @@
 
 /* camera button methods */
 
-- (void)switchButtonPressed:(UIButton *)button {
+- (void)switchButtonPressed:(UIButton *)button
+{
     [self.camera togglePosition];
 }
 
-- (NSURL *)applicationDocumentsDirectory {
-    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
-                                                   inDomains:NSUserDomainMask] lastObject];
+- (NSURL *)applicationDocumentsDirectory
+{
+    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
-- (void)flashButtonPressed:(UIButton *)button {
-    
+- (void)flashButtonPressed:(UIButton *)button
+{
     if(self.camera.flash == LLCameraFlashOff) {
         BOOL done = [self.camera updateFlashMode:LLCameraFlashOn];
         if(done) {
@@ -176,8 +180,8 @@
     }
 }
 
-- (void)snapButtonPressed:(UIButton *)button {
-    
+- (void)snapButtonPressed:(UIButton *)button
+{
     __weak typeof(self) weakSelf = self;
     
     if(self.segmentedControl.selectedSegmentIndex == 0) {
@@ -198,9 +202,8 @@
                 NSLog(@"An error has occured: %@", error);
             }
         } exactSeenImage:YES];
-    }
-    else {
         
+    } else {
         if(!self.camera.isRecording) {
             self.segmentedControl.hidden = YES;
             self.flashButton.hidden = YES;
@@ -213,8 +216,8 @@
             NSURL *outputURL = [[[self applicationDocumentsDirectory]
                                  URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
             [self.camera startRecordingWithOutputUrl:outputURL];
-        }
-        else {
+            
+        } else {
             self.segmentedControl.hidden = NO;
             self.flashButton.hidden = NO;
             self.switchButton.hidden = NO;
@@ -232,7 +235,8 @@
 
 /* other lifecycle methods */
 
-- (void)viewWillLayoutSubviews {
+- (void)viewWillLayoutSubviews
+{
     [super viewWillLayoutSubviews];
     
     self.camera.view.frame = self.view.contentBounds;
@@ -247,15 +251,18 @@
     self.switchButton.right = self.view.width - 5.0f;
 }
 
-- (BOOL)prefersStatusBarHidden {
+- (BOOL)prefersStatusBarHidden
+{
     return YES;
 }
 
-- (UIInterfaceOrientation) preferredInterfaceOrientationForPresentation {
+- (UIInterfaceOrientation) preferredInterfaceOrientationForPresentation
+{
     return UIInterfaceOrientationPortrait;
 }
 
-- (void)didReceiveMemoryWarning {
+- (void)didReceiveMemoryWarning
+{
     [super didReceiveMemoryWarning];
 }
 
