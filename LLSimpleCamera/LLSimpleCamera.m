@@ -181,6 +181,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         if([self.session canAddInput:_videoDeviceInput]) {
             [self.session  addInput:_videoDeviceInput];
+			self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
         }
         
         // add audio if video is enabled
