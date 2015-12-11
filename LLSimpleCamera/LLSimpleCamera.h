@@ -23,10 +23,10 @@ typedef enum : NSUInteger {
 
 typedef enum : NSUInteger {
     // The default state has to be off
-    CameraMirrorOff,
-    CameraMirrorOn,
-    CameraMirrorAuto
-} CameraMirror;
+    LLCameraMirrorOff,
+    LLCameraMirrorOn,
+    LLCameraMirrorAuto
+} LLCameraMirror;
 
 extern NSString *const LLSimpleCameraErrorDomain;
 typedef enum : NSUInteger {
@@ -62,7 +62,7 @@ typedef enum : NSUInteger {
 /**
  * Camera mirror mode.
  */
-@property (nonatomic) CameraMirror mirror;
+@property (nonatomic) LLCameraMirror mirror;
 
 /**
  * Position of the camera.

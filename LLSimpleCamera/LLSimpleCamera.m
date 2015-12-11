@@ -464,7 +464,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
-- (void)setMirror:(CameraMirror)mirror
+- (void)setMirror:(LLCameraMirror)mirror
 {
     _mirror = mirror;
 
@@ -476,7 +476,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     AVCaptureConnection *pictureConnection = [_stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
 
     switch (mirror) {
-        case CameraMirrorOff: {
+        case LLCameraMirrorOff: {
             if ([videoConnection isVideoMirroringSupported]) {
                 [videoConnection setVideoMirrored:NO];
             }
@@ -487,7 +487,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             break;
         }
 
-        case CameraMirrorOn: {
+        case LLCameraMirrorOn: {
             if ([videoConnection isVideoMirroringSupported]) {
                 [videoConnection setVideoMirrored:YES];
             }
@@ -498,7 +498,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             break;
         }
 
-        case CameraMirrorAuto: {
+        case LLCameraMirrorAuto: {
             BOOL shouldMirror = (_position == LLCameraPositionFront);
             if ([videoConnection isVideoMirroringSupported]) {
                 [videoConnection setVideoMirrored:shouldMirror];
@@ -579,7 +579,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.videoCaptureDevice = device;
     self.videoDeviceInput = videoInput;
 
-    if (_position == CameraPositionFront) {
+    if (_position == LLCameraPositionFront) {
         AVCaptureConnection *videoConnection = [_movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
         if ([videoConnection isVideoMirroringSupported]) {
             [videoConnection setVideoMirrored:YES];
