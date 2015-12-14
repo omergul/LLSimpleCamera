@@ -579,18 +579,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.videoCaptureDevice = device;
     self.videoDeviceInput = videoInput;
 
-    if (_position == LLCameraPositionFront) {
-        AVCaptureConnection *videoConnection = [_movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-        if ([videoConnection isVideoMirroringSupported]) {
-            [videoConnection setVideoMirrored:YES];
-        }
-
-        AVCaptureConnection *pictureConnection = [_stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-        if ([pictureConnection isVideoMirroringSupported]) {
-            [pictureConnection setVideoMirrored:YES];
-        }
-    }
-
     [self setMirror:_mirror];
 }
 
