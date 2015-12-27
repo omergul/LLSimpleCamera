@@ -46,18 +46,33 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 {
     self = [super initWithNibName:nil bundle:nil];
     if(self) {
-        _cameraQuality = quality;
-        _position = position;
-        _fixOrientationAfterCapture = NO;
-        _tapToFocus = YES;
-        _useDeviceOrientation = NO;
-        _flash = LLCameraFlashOff;
-        _mirror = LLCameraMirrorAuto;
-        _videoEnabled = videoEnabled;
-        _recording = NO;
+        [self setupWithQuality:quality position:position videoEnabled:videoEnabled];
     }
     
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    if (self = [super initWithCoder:aDecoder]) {
+        [self setupWithQuality:AVCaptureSessionPresetHigh
+                      position:LLCameraPositionRear
+                  videoEnabled:YES];
+    }
+    return self;
+}
+
+- (void) setupWithQuality:(NSString *)quality
+                 position:(LLCameraPosition)position
+             videoEnabled:(BOOL)videoEnabled {
+    _cameraQuality = quality;
+    _position = position;
+    _fixOrientationAfterCapture = NO;
+    _tapToFocus = YES;
+    _useDeviceOrientation = NO;
+    _flash = LLCameraFlashOff;
+    _mirror = LLCameraMirrorAuto;
+    _videoEnabled = videoEnabled;
+    _recording = NO;
 }
 
 - (void)viewDidLoad
