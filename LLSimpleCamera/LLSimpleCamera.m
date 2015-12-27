@@ -52,6 +52,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         _tapToFocus = YES;
         _useDeviceOrientation = NO;
         _flash = LLCameraFlashOff;
+        _mirror = LLCameraMirrorAuto;
         _videoEnabled = videoEnabled;
         _recording = NO;
     }
@@ -463,6 +464,56 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
+- (void)setMirror:(LLCameraMirror)mirror
+{
+    _mirror = mirror;
+
+    if(!self.session) {
+        return;
+    }
+
+    AVCaptureConnection *videoConnection = [_movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+    AVCaptureConnection *pictureConnection = [_stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+
+    switch (mirror) {
+        case LLCameraMirrorOff: {
+            if ([videoConnection isVideoMirroringSupported]) {
+                [videoConnection setVideoMirrored:NO];
+            }
+            
+            if ([pictureConnection isVideoMirroringSupported]) {
+                [pictureConnection setVideoMirrored:NO];
+            }
+            break;
+        }
+
+        case LLCameraMirrorOn: {
+            if ([videoConnection isVideoMirroringSupported]) {
+                [videoConnection setVideoMirrored:YES];
+            }
+            
+            if ([pictureConnection isVideoMirroringSupported]) {
+                [pictureConnection setVideoMirrored:YES];
+            }
+            break;
+        }
+
+        case LLCameraMirrorAuto: {
+            BOOL shouldMirror = (_position == LLCameraPositionFront);
+            if ([videoConnection isVideoMirroringSupported]) {
+                [videoConnection setVideoMirrored:shouldMirror];
+            }
+            
+            if ([pictureConnection isVideoMirroringSupported]) {
+                [pictureConnection setVideoMirrored:shouldMirror];
+            }
+            break;
+        }
+    }
+
+    return;
+}
+
 - (LLCameraPosition)togglePosition
 {
     if(!self.session) {
@@ -527,6 +578,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     self.videoCaptureDevice = device;
     self.videoDeviceInput = videoInput;
+
+    [self setMirror:_mirror];
 }
 
 
