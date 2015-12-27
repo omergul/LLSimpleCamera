@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "LLSimpleCamera"
-  s.version      = "4.0.0"
+  s.version      = "4.1.0"
   s.summary      = "LLSimpleCamera: A simple customizable camera - video recorder control."
   s.description  = <<-DESC
                    LLSimpleCamera is a library for creating a customized camera screens similar to snapchat's. You don't have to present the camera in a new view controller. You can capture images or record videos very easily.
@@ -15,7 +15,7 @@ hides the nitty gritty details from the developer
   s.license      = { :type => 'APACHE', :file => 'LICENSE' }
   s.author       = { "Ömer Faruk Gül" => "omergul123@gmail.com" }
   s.platform     = :ios,'7.0'
-  s.source       = { :git => "https://github.com/omergul123/LLSimpleCamera.git", :tag => "v4.0.0" }
+  s.source       = { :git => "https://github.com/omergul123/LLSimpleCamera.git", :tag => "v4.1.0" }
   s.source_files  = 'LLSimpleCamera/*.{h,m}'
   s.requires_arc = true
   s.framework = 'AVFoundation'
