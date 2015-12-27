@@ -52,7 +52,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     return self;
 }
 
-- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
     if (self = [super initWithCoder:aDecoder]) {
         [self setupWithQuality:AVCaptureSessionPresetHigh
                       position:LLCameraPositionRear
@@ -61,9 +62,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     return self;
 }
 
-- (void) setupWithQuality:(NSString *)quality
-                 position:(LLCameraPosition)position
-             videoEnabled:(BOOL)videoEnabled {
+- (void)setupWithQuality:(NSString *)quality
+                position:(LLCameraPosition)position
+            videoEnabled:(BOOL)videoEnabled
+{
     _cameraQuality = quality;
     _position = position;
     _fixOrientationAfterCapture = NO;
