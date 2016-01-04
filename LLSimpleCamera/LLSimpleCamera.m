@@ -10,7 +10,7 @@
 #import <ImageIO/CGImageProperties.h>
 #import "UIImage+FixOrientation.h"
 
-@interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate, UIGestureRecognizerDelegate>
+@interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate>
 @property (strong, nonatomic) UIView *preview;
 @property (strong, nonatomic) AVCaptureStillImageOutput *stillImageOutput;
 @property (strong, nonatomic) AVCaptureSession *session;
@@ -23,9 +23,6 @@
 @property (strong, nonatomic) CALayer *focusBoxLayer;
 @property (strong, nonatomic) CAAnimation *focusBoxAnimation;
 @property (strong, nonatomic) AVCaptureMovieFileOutput *movieFileOutput;
-@property (strong, nonatomic) UIPinchGestureRecognizer *pinchGesture;
-@property (nonatomic, assign) CGFloat beginGestureScale;
-@property (nonatomic, assign) CGFloat effectiveScale;
 @property (nonatomic, copy) void (^didRecord)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
 @end
 
@@ -78,9 +75,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _mirror = LLCameraMirrorAuto;
     _videoEnabled = videoEnabled;
     _recording = NO;
-    _zoomingEnabled = YES;
-    _effectiveScale = 1.0f;
-    _maxScale = 10.0f;
 }
 
 - (void)viewDidLoad
@@ -100,59 +94,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     [self.tapGesture setDelaysTouchesEnded:NO];
     [self.preview addGestureRecognizer:self.tapGesture];
     
-    //pinch to zoom
-    if (_zoomingEnabled) {
-        self.pinchGesture = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinchGesture:)];
-        self.pinchGesture.delegate = self;
-        [self.preview addGestureRecognizer:self.pinchGesture];
-    }
-    
     // add focus box to view
     [self addDefaultFocusBox];
-}
-
-#pragma mark Pinch Delegate
-
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
-{
-    if ( [gestureRecognizer isKindOfClass:[UIPinchGestureRecognizer class]] ) {
-        _beginGestureScale = _effectiveScale;
-    }
-    return YES;
-}
-
-- (IBAction)handlePinchGesture:(UIPinchGestureRecognizer *)recognizer
-{
-    BOOL allTouchesAreOnThePreviewLayer = YES;
-    NSUInteger numTouches = [recognizer numberOfTouches], i;
-    for ( i = 0; i < numTouches; ++i ) {
-        CGPoint location = [recognizer locationOfTouch:i inView:self.preview];
-        CGPoint convertedLocation = [self.preview.layer convertPoint:location fromLayer:self.view.layer];
-        if ( ! [self.preview.layer containsPoint:convertedLocation] ) {
-            allTouchesAreOnThePreviewLayer = NO;
-            break;
-        }
-    }
-    
-    if ( allTouchesAreOnThePreviewLayer ) {
-        _effectiveScale = _beginGestureScale * recognizer.scale;
-        if (_effectiveScale < 1.0f)
-            _effectiveScale = 1.0f;
-        if (_effectiveScale > _maxScale)
-            _effectiveScale = _maxScale;
-        NSError *error = nil;
-        if ([_videoCaptureDevice lockForConfiguration:&error])
-          {
-            [_videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:100];
-            
-            [_videoCaptureDevice unlockForConfiguration];
-          }
-        else
-          {
-            NSLog(@"%@", error);
-          }
-        
-    }
 }
 
 #pragma mark - Camera
@@ -256,7 +199,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         if([self.session canAddInput:_videoDeviceInput]) {
             [self.session  addInput:_videoDeviceInput];
-            self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+			self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
         }
         
         // add audio if video is enabled
@@ -268,11 +211,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
                     self.onError(self, error);
                 }
             }
-            
+        
             if([self.session canAddInput:_audioDeviceInput]) {
                 [self.session addInput:_audioDeviceInput];
             }
-            
+        
             _movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
             [_movieFileOutput setMovieFragmentInterval:kCMTimeInvalid];
             if([self.session canAddOutput:_movieFileOutput]) {
@@ -307,8 +250,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 {
     if(!self.session) {
         NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
-                                             code:LLSimpleCameraErrorCodeSession
-                                         userInfo:nil];
+                                    code:LLSimpleCameraErrorCodeSession
+                                userInfo:nil];
         onCapture(self, nil, nil, error);
         return;
     }
@@ -321,36 +264,36 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     [self.captureVideoPreviewLayer.connection setEnabled:NO];
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
-        
-        UIImage *image = nil;
-        NSDictionary *metadata = nil;
-        
-        // check if we got the image buffer
-        if (imageSampleBuffer != NULL) {
-            CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
-            if(exifAttachments) {
-                metadata = (__bridge NSDictionary*)exifAttachments;
-            }
-            
-            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
-            image = [[UIImage alloc] initWithData:imageData];
-            
-            if(exactSeenImage) {
-                image = [self cropImageUsingPreviewBounds:image];
-            }
-            
-            if(self.fixOrientationAfterCapture) {
-                image = [image fixOrientation];
-            }
-        }
-        
-        // trigger the block
-        if(onCapture) {
-            dispatch_async(dispatch_get_main_queue(), ^{
+         
+         UIImage *image = nil;
+         NSDictionary *metadata = nil;
+         
+         // check if we got the image buffer
+         if (imageSampleBuffer != NULL) {
+             CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
+             if(exifAttachments) {
+                 metadata = (__bridge NSDictionary*)exifAttachments;
+             }
+             
+             NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
+             image = [[UIImage alloc] initWithData:imageData];
+             
+             if(exactSeenImage) {
+                 image = [self cropImageUsingPreviewBounds:image];
+             }
+             
+             if(self.fixOrientationAfterCapture) {
+                 image = [image fixOrientation];
+             }
+         }
+         
+         // trigger the block
+         if(onCapture) {
+             dispatch_async(dispatch_get_main_queue(), ^{
                 onCapture(self, image, metadata, error);
-            });
-        }
-    }];
+             });
+         }
+     }];
 }
 
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture
@@ -541,14 +484,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)setMirror:(LLCameraMirror)mirror
 {
     _mirror = mirror;
-    
+
     if(!self.session) {
         return;
     }
-    
+
     AVCaptureConnection *videoConnection = [_movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
     AVCaptureConnection *pictureConnection = [_stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-    
+
     switch (mirror) {
         case LLCameraMirrorOff: {
             if ([videoConnection isVideoMirroringSupported]) {
@@ -560,7 +503,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             }
             break;
         }
-            
+
         case LLCameraMirrorOn: {
             if ([videoConnection isVideoMirroringSupported]) {
                 [videoConnection setVideoMirrored:YES];
@@ -571,7 +514,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             }
             break;
         }
-            
+
         case LLCameraMirrorAuto: {
             BOOL shouldMirror = (_position == LLCameraPositionFront);
             if ([videoConnection isVideoMirroringSupported]) {
@@ -584,7 +527,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             break;
         }
     }
-    
+
     return;
 }
 
@@ -652,7 +595,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     self.videoCaptureDevice = device;
     self.videoDeviceInput = videoInput;
-    
+
     [self setMirror:_mirror];
 }
 
@@ -826,7 +769,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 {
     [super viewWillLayoutSubviews];
     
-    //    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
+//    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
     
     self.preview.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
     
