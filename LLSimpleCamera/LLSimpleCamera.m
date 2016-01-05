@@ -80,7 +80,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _recording = NO;
     _zoomingEnabled = YES;
     _effectiveScale = 1.0f;
-    _maxScale = 10.0f;
+    _maxScale = _videoCaptureDevice.activeFormat.videoMaxZoomFactor;
 }
 
 - (void)viewDidLoad
