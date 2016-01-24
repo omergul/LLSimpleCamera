@@ -274,7 +274,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             }
         }
         
+        // continiously adjust white balance
+        self.whiteBalanceMode = AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance;
         
+        // image output
         self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
         NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
         [self.stillImageOutput setOutputSettings:outputSettings];
@@ -531,6 +534,17 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
     else {
         return NO;
+    }
+}
+
+- (void)setWhiteBalanceMode:(AVCaptureWhiteBalanceMode)whiteBalanceMode
+{
+    // continiously adjust white balance
+    if ([_videoCaptureDevice isWhiteBalanceModeSupported: AVCaptureWhiteBalanceModeLocked]) {
+        if ([_videoCaptureDevice lockForConfiguration:nil]) {
+            [_videoCaptureDevice setWhiteBalanceMode:whiteBalanceMode];
+            [_videoCaptureDevice unlockForConfiguration];
+        }
     }
 }
 

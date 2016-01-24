@@ -70,6 +70,11 @@ typedef enum : NSUInteger {
 @property (nonatomic) LLCameraPosition position;
 
 /**
+ * White balance mode. Default is: AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance
+ */
+@property (nonatomic) AVCaptureWhiteBalanceMode whiteBalanceMode;
+
+/**
  * Boolean value to indicate if the video is enabled.
  */
 @property (nonatomic, getter=isVideoEnabled) BOOL videoEnabled;
