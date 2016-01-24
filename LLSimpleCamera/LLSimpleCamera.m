@@ -80,7 +80,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _recording = NO;
     _zoomingEnabled = YES;
     _effectiveScale = 1.0f;
-    _maxScale = _videoCaptureDevice.activeFormat.videoMaxZoomFactor;
 }
 
 - (void)viewDidLoad
@@ -121,7 +120,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     return YES;
 }
 
-- (IBAction)handlePinchGesture:(UIPinchGestureRecognizer *)recognizer
+- (void)handlePinchGesture:(UIPinchGestureRecognizer *)recognizer
 {
     BOOL allTouchesAreOnThePreviewLayer = YES;
     NSUInteger numTouches = [recognizer numberOfTouches], i;
@@ -134,24 +133,20 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
     }
     
-    if ( allTouchesAreOnThePreviewLayer ) {
+    if (allTouchesAreOnThePreviewLayer) {
         _effectiveScale = _beginGestureScale * recognizer.scale;
         if (_effectiveScale < 1.0f)
             _effectiveScale = 1.0f;
-        if (_effectiveScale > _maxScale)
-            _effectiveScale = _maxScale;
+        if (_effectiveScale > _videoCaptureDevice.activeFormat.videoMaxZoomFactor)
+            _effectiveScale = _videoCaptureDevice.activeFormat.videoMaxZoomFactor;
         NSError *error = nil;
-        if ([_videoCaptureDevice lockForConfiguration:&error])
-          {
+        if ([_videoCaptureDevice lockForConfiguration:&error]) {
             [_videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:100];
-            
             [_videoCaptureDevice unlockForConfiguration];
-          }
-        else
-          {
+        }
+        else {
             NSLog(@"%@", error);
-          }
-        
+        }
     }
 }
 
@@ -485,6 +480,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     } else {
         _flash = LLCameraFlashOff;
     }
+    
+    _effectiveScale = 1.0f;
     
     // trigger block
     if(self.onDeviceChange) {
