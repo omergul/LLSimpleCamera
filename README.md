@@ -12,6 +12,13 @@ You can also use my [LLVideoEditor][1] library to easily edit recorded videos.
 * hides the nitty gritty details from the developer
 * doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
+
+###Version 4.2 notes:###
+New features:
+- zoom feature
+- white balance configuration
+- attaching to view controller improved
+
 ###Version 4.1 notes:###
 Merged some PRs:
 - camera mirroring option
