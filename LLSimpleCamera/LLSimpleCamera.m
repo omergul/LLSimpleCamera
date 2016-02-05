@@ -233,9 +233,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
         
         if(devicePosition == AVCaptureDevicePositionUnspecified) {
-            _videoCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+            self.videoCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
         } else {
-            _videoCaptureDevice = [self cameraWithPosition:devicePosition];
+            self.videoCaptureDevice = [self cameraWithPosition:devicePosition];
         }
         
         NSError *error = nil;
