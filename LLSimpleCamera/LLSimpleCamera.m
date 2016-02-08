@@ -250,7 +250,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         if([self.session canAddInput:_videoDeviceInput]) {
             [self.session  addInput:_videoDeviceInput];
-			self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+            if (!self.useDeviceOrientation) {
+                self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+            }
         }
         
         // add audio if video is enabled
@@ -844,7 +846,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.captureVideoPreviewLayer.bounds = bounds;
     self.captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
-    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+    if (!self.useDeviceOrientation) {
+        self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+    }
 }
 
 - (AVCaptureVideoOrientation)orientationForConnection
