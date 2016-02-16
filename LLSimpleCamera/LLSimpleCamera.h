@@ -157,14 +157,14 @@ typedef enum : NSUInteger {
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
 
 /*
- * Start recording a video. Video is saved to the given url.
+ * Start recording a video with a completion block. Video is saved to the given url.
  */
-- (void)startRecordingWithOutputUrl:(NSURL *)url;
+- (void)startRecordingWithOutputUrl:(NSURL *)url didRecord:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock;
 
 /**
- * Stop recording video with a completion block.
+ * Stop recording video.
  */
-- (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock;
+- (void)stopRecording;
 
 /**
  * Attaches the LLSimpleCamera to another view controller with a frame. It basically adds the LLSimpleCamera as a

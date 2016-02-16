@@ -359,7 +359,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 #pragma mark - Video Capture
 
-- (void)startRecordingWithOutputUrl:(NSURL *)url
+- (void)startRecordingWithOutputUrl:(NSURL *)url didRecord:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock
 {
     // check if video is enabled
     if(!self.videoEnabled) {
@@ -389,16 +389,17 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
     }
     
+    self.didRecord = completionBlock;
+    
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
 }
 
-- (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock
+- (void)stopRecording
 {
     if(!self.videoEnabled) {
         return;
     }
     
-    self.didRecord = completionBlock;
     [self.movieFileOutput stopRecording];
 }
 
