@@ -26,7 +26,7 @@
 @property (strong, nonatomic) UIPinchGestureRecognizer *pinchGesture;
 @property (nonatomic, assign) CGFloat beginGestureScale;
 @property (nonatomic, assign) CGFloat effectiveScale;
-@property (nonatomic, copy) void (^didRecord)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
+@property (nonatomic, copy) void (^didRecordCompletionBlock)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
 @end
 
 NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
@@ -389,7 +389,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
     }
     
-    self.didRecord = completionBlock;
+    self.didRecordCompletionBlock = completionBlock;
     
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
 }
@@ -413,8 +413,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.recording = NO;
     [self enableTorch:NO];
     
-    if(self.didRecord) {
-        self.didRecord(self, outputFileURL, error);
+    if(self.didRecordCompletionBlock) {
+        self.didRecordCompletionBlock(self, outputFileURL, error);
     }
 }
 
