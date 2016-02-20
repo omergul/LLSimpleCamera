@@ -9,6 +9,7 @@
 #import "LLSimpleCamera.h"
 #import <ImageIO/CGImageProperties.h>
 #import "UIImage+FixOrientation.h"
+#import "LLSimpleCamera+Helper.h"
 
 @interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate, UIGestureRecognizerDelegate>
 @property (strong, nonatomic) UIView *preview;
@@ -335,7 +336,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
              image = [[UIImage alloc] initWithData:imageData];
              
              if(exactSeenImage) {
-                 image = [self cropImageUsingPreviewBounds:image];
+                 image = [self cropImage:image usingPreviewLayer:self.captureVideoPreviewLayer];
              }
              
              if(self.fixOrientationAfterCapture) {
@@ -435,24 +436,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 }
 
 #pragma mark - Helpers
-
-- (UIImage *)cropImageUsingPreviewBounds:(UIImage *)image
-{
-    CGRect previewBounds = self.captureVideoPreviewLayer.bounds;
-    CGRect outputRect = [self.captureVideoPreviewLayer metadataOutputRectOfInterestForRect:previewBounds];
-    
-    CGImageRef takenCGImage = image.CGImage;
-    size_t width = CGImageGetWidth(takenCGImage);
-    size_t height = CGImageGetHeight(takenCGImage);
-    CGRect cropRect = CGRectMake(outputRect.origin.x * width, outputRect.origin.y * height,
-                                 outputRect.size.width * width, outputRect.size.height * height);
-    
-    CGImageRef cropCGImage = CGImageCreateWithImageInRect(takenCGImage, cropRect);
-    image = [UIImage imageWithCGImage:cropCGImage scale:1 orientation:image.imageOrientation];
-    CGImageRelease(cropCGImage);
-    
-    return image;
-}
 
 - (AVCaptureConnection *)captureConnection
 {
@@ -691,7 +674,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     CGPoint touchedPoint = (CGPoint) [gestureRecognizer locationInView:self.preview];
     
     // focus
-    CGPoint pointOfInterest = [self convertToPointOfInterestFromViewCoordinates:touchedPoint];
+    CGPoint pointOfInterest = [self convertToPointOfInterestFromViewCoordinates:touchedPoint
+                                                                   previewLayer:self.captureVideoPreviewLayer
+                                                                          ports:self.videoDeviceInput.ports];
     [self focusAtPoint:pointOfInterest];
     
     // show the box
@@ -758,69 +743,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         // run the animation
         [self.focusBoxLayer addAnimation:self.focusBoxAnimation forKey:@"animateOpacity"];
     }
-}
-
-- (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates
-{
-    AVCaptureVideoPreviewLayer *previewLayer = self.captureVideoPreviewLayer;
-    
-    CGPoint pointOfInterest = CGPointMake(.5f, .5f);
-    CGSize frameSize = previewLayer.frame.size;
-    
-    if ( [previewLayer.videoGravity isEqualToString:AVLayerVideoGravityResize] ) {
-        pointOfInterest = CGPointMake(viewCoordinates.y / frameSize.height, 1.f - (viewCoordinates.x / frameSize.width));
-    } else {
-        CGRect cleanAperture;
-        for (AVCaptureInputPort *port in [self.videoDeviceInput ports]) {
-            if (port.mediaType == AVMediaTypeVideo) {
-                cleanAperture = CMVideoFormatDescriptionGetCleanAperture([port formatDescription], YES);
-                CGSize apertureSize = cleanAperture.size;
-                CGPoint point = viewCoordinates;
-                
-                CGFloat apertureRatio = apertureSize.height / apertureSize.width;
-                CGFloat viewRatio = frameSize.width / frameSize.height;
-                CGFloat xc = .5f;
-                CGFloat yc = .5f;
-                
-                if ( [previewLayer.videoGravity isEqualToString:AVLayerVideoGravityResizeAspect] ) {
-                    if (viewRatio > apertureRatio) {
-                        CGFloat y2 = frameSize.height;
-                        CGFloat x2 = frameSize.height * apertureRatio;
-                        CGFloat x1 = frameSize.width;
-                        CGFloat blackBar = (x1 - x2) / 2;
-                        if (point.x >= blackBar && point.x <= blackBar + x2) {
-                            xc = point.y / y2;
-                            yc = 1.f - ((point.x - blackBar) / x2);
-                        }
-                    } else {
-                        CGFloat y2 = frameSize.width / apertureRatio;
-                        CGFloat y1 = frameSize.height;
-                        CGFloat x2 = frameSize.width;
-                        CGFloat blackBar = (y1 - y2) / 2;
-                        if (point.y >= blackBar && point.y <= blackBar + y2) {
-                            xc = ((point.y - blackBar) / y2);
-                            yc = 1.f - (point.x / x2);
-                        }
-                    }
-                } else if ([previewLayer.videoGravity isEqualToString:AVLayerVideoGravityResizeAspectFill]) {
-                    if (viewRatio > apertureRatio) {
-                        CGFloat y2 = apertureSize.width * (frameSize.width / apertureSize.height);
-                        xc = (point.y + ((y2 - frameSize.height) / 2.f)) / y2;
-                        yc = (frameSize.width - point.x) / frameSize.width;
-                    } else {
-                        CGFloat x2 = apertureSize.height * (frameSize.height / apertureSize.width);
-                        yc = 1.f - ((point.x + ((x2 - frameSize.width) / 2)) / x2);
-                        xc = point.y / frameSize.height;
-                    }
-                }
-                
-                pointOfInterest = CGPointMake(xc, yc);
-                break;
-            }
-        }
-    }
-    
-    return pointOfInterest;
 }
 
 #pragma mark - UIViewController
