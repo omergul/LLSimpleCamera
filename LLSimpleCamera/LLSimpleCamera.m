@@ -419,7 +419,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 - (void)enableTorch:(BOOL)enabled
 {
-    // check if the device has a toch, otherwise don't even bother to take any action.
+    // check if the device has a torch, otherwise don't do anything
     if([self isTorchAvailable]) {
         [self.session beginConfiguration];
         [self.videoCaptureDevice lockForConfiguration:nil];
@@ -523,8 +523,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 - (void)setWhiteBalanceMode:(AVCaptureWhiteBalanceMode)whiteBalanceMode
 {
-    // continiously adjust white balance
-    if ([_videoCaptureDevice isWhiteBalanceModeSupported: AVCaptureWhiteBalanceModeLocked]) {
+    if ([_videoCaptureDevice isWhiteBalanceModeSupported: whiteBalanceMode]) {
         if ([_videoCaptureDevice lockForConfiguration:nil]) {
             [_videoCaptureDevice setWhiteBalanceMode:whiteBalanceMode];
             [_videoCaptureDevice unlockForConfiguration];
