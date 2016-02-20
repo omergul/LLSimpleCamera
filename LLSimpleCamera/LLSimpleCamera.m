@@ -233,9 +233,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
         
         if(devicePosition == AVCaptureDevicePositionUnspecified) {
-            _videoCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+            self.videoCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
         } else {
-            _videoCaptureDevice = [self cameraWithPosition:devicePosition];
+            self.videoCaptureDevice = [self cameraWithPosition:devicePosition];
         }
         
         NSError *error = nil;
@@ -250,7 +250,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         if([self.session canAddInput:_videoDeviceInput]) {
             [self.session  addInput:_videoDeviceInput];
-			self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+            if (!self.useDeviceOrientation) {
+                self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+            }
         }
         
         // add audio if video is enabled
@@ -357,7 +359,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 #pragma mark - Video Capture
 
-- (void)startRecordingWithOutputUrl:(NSURL *)url
+- (void)startRecordingWithOutputUrl:(NSURL *)url didRecord:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock
 {
     // check if video is enabled
     if(!self.videoEnabled) {
@@ -387,16 +389,17 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         }
     }
     
+    self.didRecord = completionBlock;
+    
     [self.movieFileOutput startRecordingToOutputFileURL:url recordingDelegate:self];
 }
 
-- (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock
+- (void)stopRecording
 {
     if(!self.videoEnabled) {
         return;
     }
     
-    self.didRecord = completionBlock;
     [self.movieFileOutput stopRecording];
 }
 
@@ -844,7 +847,9 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.captureVideoPreviewLayer.bounds = bounds;
     self.captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
-    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+    if (!self.useDeviceOrientation) {
+        self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+    }
 }
 
 - (AVCaptureVideoOrientation)orientationForConnection

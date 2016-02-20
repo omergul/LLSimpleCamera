@@ -215,7 +215,10 @@
             // start recording
             NSURL *outputURL = [[[self applicationDocumentsDirectory]
                                  URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
-            [self.camera startRecordingWithOutputUrl:outputURL];
+            [self.camera startRecordingWithOutputUrl:outputURL didRecord:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
+                VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
+                [self.navigationController pushViewController:vc animated:YES];
+            }];
             
         } else {
             self.segmentedControl.hidden = NO;
@@ -225,10 +228,7 @@
             self.snapButton.layer.borderColor = [UIColor whiteColor].CGColor;
             self.snapButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.5];
             
-            [self.camera stopRecording:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
-                VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
-                [self.navigationController pushViewController:vc animated:YES];
-            }];
+            [self.camera stopRecording];
         }
     }
 }
