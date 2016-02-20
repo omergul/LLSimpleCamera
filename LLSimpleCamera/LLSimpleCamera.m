@@ -138,12 +138,12 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         _effectiveScale = _beginGestureScale * recognizer.scale;
         if (_effectiveScale < 1.0f)
             _effectiveScale = 1.0f;
-        if (_effectiveScale > _videoCaptureDevice.activeFormat.videoMaxZoomFactor)
-            _effectiveScale = _videoCaptureDevice.activeFormat.videoMaxZoomFactor;
+        if (_effectiveScale > self.videoCaptureDevice.activeFormat.videoMaxZoomFactor)
+            _effectiveScale = self.videoCaptureDevice.activeFormat.videoMaxZoomFactor;
         NSError *error = nil;
-        if ([_videoCaptureDevice lockForConfiguration:&error]) {
-            [_videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:100];
-            [_videoCaptureDevice unlockForConfiguration];
+        if ([self.videoCaptureDevice lockForConfiguration:&error]) {
+            [self.videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:100];
+            [self.videoCaptureDevice unlockForConfiguration];
         }
         else {
             NSLog(@"%@", error);
@@ -523,10 +523,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 - (void)setWhiteBalanceMode:(AVCaptureWhiteBalanceMode)whiteBalanceMode
 {
-    if ([_videoCaptureDevice isWhiteBalanceModeSupported: whiteBalanceMode]) {
-        if ([_videoCaptureDevice lockForConfiguration:nil]) {
-            [_videoCaptureDevice setWhiteBalanceMode:whiteBalanceMode];
-            [_videoCaptureDevice unlockForConfiguration];
+    if ([self.videoCaptureDevice isWhiteBalanceModeSupported:whiteBalanceMode]) {
+        if ([self.videoCaptureDevice lockForConfiguration:nil]) {
+            [self.videoCaptureDevice setWhiteBalanceMode:whiteBalanceMode];
+            [self.videoCaptureDevice unlockForConfiguration];
         }
     }
 }
@@ -651,7 +651,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 
 // Find a camera with the specified AVCaptureDevicePosition, returning nil if one is not found
-- (AVCaptureDevice *) cameraWithPosition:(AVCaptureDevicePosition) position
+- (AVCaptureDevice *)cameraWithPosition:(AVCaptureDevicePosition) position
 {
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     for (AVCaptureDevice *device in devices) {
@@ -668,15 +668,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         return;
     }
     
-    CGPoint touchedPoint = (CGPoint) [gestureRecognizer locationInView:self.preview];
-    
-    // focus
+    CGPoint touchedPoint = [gestureRecognizer locationInView:self.preview];
     CGPoint pointOfInterest = [self convertToPointOfInterestFromViewCoordinates:touchedPoint
                                                                    previewLayer:self.captureVideoPreviewLayer
                                                                           ports:self.videoDeviceInput.ports];
     [self focusAtPoint:pointOfInterest];
-    
-    // show the box
     [self showFocusBox:touchedPoint];
 }
 
@@ -729,7 +725,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         // clear animations
         [self.focusBoxLayer removeAllAnimations];
         
-        // move layer to the touc point
+        // move layer to the touch point
         [CATransaction begin];
         [CATransaction setValue: (id) kCFBooleanTrue forKey: kCATransactionDisableActions];
         self.focusBoxLayer.position = point;
@@ -758,8 +754,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 {
     [super viewWillLayoutSubviews];
     
-//    NSLog(@"layout cameraVC : %d", self.interfaceOrientation);
-    
     self.preview.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
     
     CGRect bounds = self.preview.bounds;
@@ -776,7 +770,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     if(self.useDeviceOrientation) {
         switch ([UIDevice currentDevice].orientation) {
             case UIDeviceOrientationLandscapeLeft:
-                // yes we to the right, this is not bug!
+                // yes to the right, this is not bug!
                 videoOrientation = AVCaptureVideoOrientationLandscapeRight;
                 break;
             case UIDeviceOrientationLandscapeRight:
@@ -845,7 +839,6 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     } else {
         completionBlock(YES);
     }
-    
 }
 
 + (void)requestMicrophonePermission:(void (^)(BOOL granted))completionBlock
