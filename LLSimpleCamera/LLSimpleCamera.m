@@ -144,9 +144,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         if ([self.videoCaptureDevice lockForConfiguration:&error]) {
             [self.videoCaptureDevice rampToVideoZoomFactor:_effectiveScale withRate:100];
             [self.videoCaptureDevice unlockForConfiguration];
-        }
-        else {
-            NSLog(@"%@", error);
+        } else {
+            [self passError:error];
         }
     }
 }
@@ -175,9 +174,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
                         NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
                                                              code:LLSimpleCameraErrorCodeMicrophonePermission
                                                          userInfo:nil];
-                        if(self.onError) {
-                            self.onError(self, error);
-                        }
+                        [self passError:error];
                     }
                 }];
             }
@@ -189,9 +186,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
                                                  code:LLSimpleCameraErrorCodeCameraPermission
                                              userInfo:nil];
-            if(self.onError) {
-                self.onError(self, error);
-            }
+            [self passError:error];
         }
     }];
 }
@@ -243,9 +238,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         _videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:_videoCaptureDevice error:&error];
         
         if (!_videoDeviceInput) {
-            if(self.onError) {
-                self.onError(self, error);
-            }
+            [self passError:error];
             return;
         }
         
@@ -259,9 +252,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             _audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
             _audioDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:_audioCaptureDevice error:&error];
             if (!_audioDeviceInput) {
-                if(self.onError) {
-                    self.onError(self, error);
-                }
+                [self passError:error];
             }
         
             if([self.session canAddInput:_audioDeviceInput]) {
@@ -365,10 +356,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
                                              code:LLSimpleCameraErrorCodeVideoNotEnabled
                                          userInfo:nil];
-        if(self.onError) {
-            self.onError(self, error);
-        }
-        
+        [self passError:error];
         return;
     }
     
@@ -381,7 +369,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         for (AVCaptureInputPort *port in [connection inputPorts]) {
             // get only the video media types
             if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
-                if([connection isVideoOrientationSupported]) {
+                if ([connection isVideoOrientationSupported]) {
                     [connection setVideoOrientation:[self orientationForConnection]];
                 }
             }
@@ -421,19 +409,26 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 {
     // check if the device has a torch, otherwise don't do anything
     if([self isTorchAvailable]) {
-        [self.session beginConfiguration];
-        [self.videoCaptureDevice lockForConfiguration:nil];
-        if (enabled) {
-            [self.videoCaptureDevice setTorchMode:AVCaptureTorchModeOn];
+        AVCaptureTorchMode torchMode = enabled ? AVCaptureTorchModeOn : AVCaptureTorchModeOff;
+        NSError *error;
+        if ([self.videoCaptureDevice lockForConfiguration:&error]) {
+            [self.videoCaptureDevice setTorchMode:torchMode];
+            [self.videoCaptureDevice unlockForConfiguration];
         } else {
-            [self.videoCaptureDevice setTorchMode:AVCaptureTorchModeOff];
+            [self passError:error];
         }
-        [self.videoCaptureDevice unlockForConfiguration];
-        [self.session commitConfiguration];
     }
 }
 
 #pragma mark - Helpers
+
+- (void)passError:(NSError *)error
+{
+    if(self.onError) {
+        __weak typeof(self) weakSelf = self;
+        self.onError(weakSelf, error);
+    }
+}
 
 - (AVCaptureConnection *)captureConnection
 {
@@ -471,7 +466,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     // trigger block
     if(self.onDeviceChange) {
-        self.onDeviceChange(self, videoCaptureDevice);
+        __weak typeof(self) weakSelf = self;
+        self.onDeviceChange(weakSelf, videoCaptureDevice);
     }
 }
 
@@ -508,11 +504,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             
             _flash = cameraFlash;
             return YES;
-        }
-        else {
-            if(self.onError) {
-                self.onError(self, error);
-            }
+        } else {
+            [self passError:error];
             return NO;
         }
     }
@@ -524,9 +517,12 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)setWhiteBalanceMode:(AVCaptureWhiteBalanceMode)whiteBalanceMode
 {
     if ([self.videoCaptureDevice isWhiteBalanceModeSupported:whiteBalanceMode]) {
-        if ([self.videoCaptureDevice lockForConfiguration:nil]) {
+        NSError *error;
+        if ([self.videoCaptureDevice lockForConfiguration:&error]) {
             [self.videoCaptureDevice setWhiteBalanceMode:whiteBalanceMode];
             [self.videoCaptureDevice unlockForConfiguration];
+        } else {
+            [self passError:error];
         }
     }
 }
@@ -631,9 +627,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     NSError *error = nil;
     AVCaptureDeviceInput *videoInput = [[AVCaptureDeviceInput alloc] initWithDevice:device error:&error];
     if(error) {
-        if(self.onError) {
-            self.onError(self, error);
-        }
+        [self passError:error];
         [self.session commitConfiguration];
         return;
     }
@@ -711,10 +705,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             device.focusPointOfInterest = point;
             device.focusMode = AVCaptureFocusModeAutoFocus;
             [device unlockForConfiguration];
-        }
-        
-        if(error && self.onError) {
-            self.onError(self, error);
+        } else {
+            [self passError:error];
         }
     }
 }
