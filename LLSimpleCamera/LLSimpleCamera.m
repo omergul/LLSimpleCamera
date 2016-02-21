@@ -292,7 +292,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 #pragma mark - Image Capture
 
--(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage animationBlock:(void (^)(AVCaptureVideoPreviewLayer *))animationBlock
 {
     if(!self.session) {
         NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
@@ -306,11 +306,13 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     AVCaptureConnection *videoConnection = [self captureConnection];
     videoConnection.videoOrientation = [self orientationForConnection];
     
-    // freeze the screen
-    [self.captureVideoPreviewLayer.connection setEnabled:NO];
+    BOOL flashActive = self.videoCaptureDevice.flashActive;
+    if (!flashActive && animationBlock) {
+        animationBlock(self.captureVideoPreviewLayer);
+    }
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
-         
+        
          UIImage *image = nil;
          NSDictionary *metadata = nil;
          
@@ -340,6 +342,21 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
              });
          }
      }];
+}
+
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
+    
+    [self capture:onCapture exactSeenImage:exactSeenImage animationBlock:^(AVCaptureVideoPreviewLayer *layer) {
+        CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        animation.duration = 0.1;
+        animation.autoreverses = YES;
+        animation.repeatCount = 0.0;
+        animation.fromValue = [NSNumber numberWithFloat:1.0];
+        animation.toValue = [NSNumber numberWithFloat:0.1];
+        animation.fillMode = kCAFillModeForwards;
+        animation.removedOnCompletion = NO;
+        [layer addAnimation:animation forKey:@"animateOpacity"];
+    }];
 }
 
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture

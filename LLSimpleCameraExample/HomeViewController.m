@@ -188,13 +188,6 @@
         // capture
         [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
             if(!error) {
-                
-                // We should stop the camera, we are opening a new vc, thus we don't need it anymore.
-                // This is important, otherwise you may experience memory crashes.
-                // Camera is started again at viewWillAppear after the user comes back to this view.
-                // I put the delay, because in iOS9 the shutter sound gets interrupted if we call it directly.
-                [camera performSelector:@selector(stop) withObject:nil afterDelay:0.2];
-                
                 ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
                 [weakSelf presentViewController:imageVC animated:NO completion:nil];
             }
