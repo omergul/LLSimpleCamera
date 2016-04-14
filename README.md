@@ -45,7 +45,7 @@ self.camera =  [[LLSimpleCamera alloc] initWithVideoEnabled:YES];
 
 // camera with precise quality, position and video parameters.
 self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
-                                             position:CameraPositionBack
+                                             position:LLCameraPositionRear
                                          videoEnabled:YES];
 // attach to the view
 [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
