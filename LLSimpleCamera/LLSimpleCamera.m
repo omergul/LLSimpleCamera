@@ -295,6 +295,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)stop
 {
     [self.session stopRunning];
+    self.session = nil;
 }
 
 
