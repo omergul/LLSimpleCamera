@@ -74,6 +74,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _fixOrientationAfterCapture = NO;
     _tapToFocus = YES;
     _useDeviceOrientation = NO;
+    _useDeviceOrientationOnCapture = YES;
     _flash = LLCameraFlashOff;
     _mirror = LLCameraMirrorAuto;
     _videoEnabled = videoEnabled;
@@ -250,7 +251,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         if([self.session canAddInput:_videoDeviceInput]) {
             [self.session  addInput:_videoDeviceInput];
-			self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+            self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection:false];
         }
         
         // add audio if video is enabled
@@ -313,7 +314,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     // get connection and set orientation
     AVCaptureConnection *videoConnection = [self captureConnection];
-    videoConnection.videoOrientation = [self orientationForConnection];
+    videoConnection.videoOrientation = [self orientationForConnection:true];
     
     // freeze the screen
     [self.captureVideoPreviewLayer.connection setEnabled:NO];
@@ -382,7 +383,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             // get only the video media types
             if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
                 if([connection isVideoOrientationSupported]) {
-                    [connection setVideoOrientation:[self orientationForConnection]];
+                    [connection setVideoOrientation:[self orientationForConnection:false]];
                 }
             }
         }
@@ -846,14 +847,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.captureVideoPreviewLayer.bounds = bounds;
     self.captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
-    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection:false];
 }
 
-- (AVCaptureVideoOrientation)orientationForConnection
+- (AVCaptureVideoOrientation)orientationForConnection: (BOOL) capture
 {
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
     
-    if(self.useDeviceOrientation) {
+    if(self.useDeviceOrientation || (self.useDeviceOrientationOnCapture && capture)) {
         switch ([UIDevice currentDevice].orientation) {
             case UIDeviceOrientationLandscapeLeft:
                 // yes we to the right, this is not bug!
