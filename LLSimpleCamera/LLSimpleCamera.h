@@ -199,12 +199,12 @@ typedef enum : NSUInteger {
 - (BOOL)updateFlashMode:(LLCameraFlash)cameraFlash;
 
 /**
- * Checks if flash is avilable for the currently active device.
+ * Checks if flash is available for the currently active device.
  */
 - (BOOL)isFlashAvailable;
 
 /**
- * Checks if torch (flash for video) is avilable for the currently active device.
+ * Checks if torch (flash for video) is available for the currently active device.
  */
 - (BOOL)isTorchAvailable;
 
