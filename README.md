@@ -13,6 +13,10 @@ You can also use my [LLVideoEditor][1] library to easily edit recorded videos.
 * doesn't have to be presented in a new modal view controller, simply can be embedded inside any of your VCs. (like Snapchat)
 
 
+###Version 5.0 notes:###
+- Better recording API
+- Improved reliability
+
 ###Version 4.2 notes:###
 New features:
 - zoom feature
@@ -45,7 +49,7 @@ self.camera =  [[LLSimpleCamera alloc] initWithVideoEnabled:YES];
 
 // camera with precise quality, position and video parameters.
 self.camera = [[LLSimpleCamera alloc] initWithQuality:AVCaptureSessionPresetHigh
-                                             position:CameraPositionBack
+                                             position:LLCameraPositionRear
                                          videoEnabled:YES];
 // attach to the view
 [self.camera attachToViewController:self withFrame:CGRectMake(0, 0, screenRect.size.width, screenRect.size.height)];
@@ -71,17 +75,16 @@ To capture a photo:
 To start recording a video:
 ```objective-c
 // start recording
-NSURL *outputURL = [[[self applicationDocumentsDirectory]
-                     URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
-[self.camera startRecordingWithOutputUrl:outputURL];
+NSURL *outputURL = [[[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
+[self.camera startRecordingWithOutputUrl:outputURL didRecord:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
+    VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
+    [self.navigationController pushViewController:vc animated:YES];
+}];
 ```
 
 To stop recording the video:
 ```objective-c
-[self.camera stopRecording:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
-    VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
-    [self.navigationController pushViewController:vc animated:YES];
-}];
+[self.camera stopRecording];
 ```
 
 Changing the focus layer and animation:

@@ -188,13 +188,6 @@
         // capture
         [self.camera capture:^(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error) {
             if(!error) {
-                
-                // We should stop the camera, we are opening a new vc, thus we don't need it anymore.
-                // This is important, otherwise you may experience memory crashes.
-                // Camera is started again at viewWillAppear after the user comes back to this view.
-                // I put the delay, because in iOS9 the shutter sound gets interrupted if we call it directly.
-                [camera performSelector:@selector(stop) withObject:nil afterDelay:0.2];
-                
                 ImageViewController *imageVC = [[ImageViewController alloc] initWithImage:image];
                 [weakSelf presentViewController:imageVC animated:NO completion:nil];
             }
@@ -215,7 +208,10 @@
             // start recording
             NSURL *outputURL = [[[self applicationDocumentsDirectory]
                                  URLByAppendingPathComponent:@"test1"] URLByAppendingPathExtension:@"mov"];
-            [self.camera startRecordingWithOutputUrl:outputURL];
+            [self.camera startRecordingWithOutputUrl:outputURL didRecord:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
+                VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
+                [self.navigationController pushViewController:vc animated:YES];
+            }];
             
         } else {
             self.segmentedControl.hidden = NO;
@@ -225,10 +221,7 @@
             self.snapButton.layer.borderColor = [UIColor whiteColor].CGColor;
             self.snapButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.5];
             
-            [self.camera stopRecording:^(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error) {
-                VideoViewController *vc = [[VideoViewController alloc] initWithVideoUrl:outputFileUrl];
-                [self.navigationController pushViewController:vc animated:YES];
-            }];
+            [self.camera stopRecording];
         }
     }
 }
