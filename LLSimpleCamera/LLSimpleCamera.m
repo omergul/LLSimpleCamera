@@ -319,6 +319,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     // freeze the screen
     [self.captureVideoPreviewLayer.connection setEnabled:NO];
     
+    __weak typeof(self) _self = self;
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
          
          UIImage *image = nil;
@@ -335,10 +336,10 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
              image = [[UIImage alloc] initWithData:imageData];
              
              if(exactSeenImage) {
-                 image = [self cropImageUsingPreviewBounds:image];
+                 image = [_self cropImageUsingPreviewBounds:image];
              }
              
-             if(self.fixOrientationAfterCapture) {
+             if(_self.fixOrientationAfterCapture) {
                  image = [image fixOrientation];
              }
          }
@@ -346,7 +347,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
          // trigger the block
          if(onCapture) {
              dispatch_async(dispatch_get_main_queue(), ^{
-                onCapture(self, image, metadata, error);
+                onCapture(_self, image, metadata, error);
              });
          }
      }];
