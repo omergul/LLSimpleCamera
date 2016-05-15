@@ -74,7 +74,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _fixOrientationAfterCapture = NO;
     _tapToFocus = YES;
     _useDeviceOrientation = NO;
-    _useDeviceOrientationOnCapture = YES;
+    _useDeviceOrientationOnCapture = NO;
     _flash = LLCameraFlashOff;
     _mirror = LLCameraMirrorAuto;
     _videoEnabled = videoEnabled;
@@ -384,7 +384,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             // get only the video media types
             if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
                 if([connection isVideoOrientationSupported]) {
-                    [connection setVideoOrientation:[self orientationForConnection:false]];
+                    [connection setVideoOrientation:[self orientationForConnection:true]];
                 }
             }
         }
