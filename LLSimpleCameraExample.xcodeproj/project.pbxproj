@@ -258,7 +258,6 @@
 				TargetAttributes = {
 					17E4C47E1A0122A700E61ACD = {
 						CreatedOnToolsVersion = 6.0.1;
-						DevelopmentTeam = NZPAC7Q696;
 					};
 					17E4C4971A0122A700E61ACD = {
 						CreatedOnToolsVersion = 6.0.1;

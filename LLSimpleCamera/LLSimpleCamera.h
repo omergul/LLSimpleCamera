@@ -117,6 +117,12 @@ typedef enum : NSUInteger {
 @property (nonatomic) BOOL useDeviceOrientation;
 
 /**
+ * Set YES if you your view controller does not allow autorotation,
+ * but you want to use the devide orientation on capture. Disabled by default.
+ */
+@property (nonatomic) BOOL useDeviceOrientationOnCapture;
+
+/**
  * Use this method to request camera permission before initalizing LLSimpleCamera.
  */
 + (void)requestCameraPermission:(void (^)(BOOL granted))completionBlock;
