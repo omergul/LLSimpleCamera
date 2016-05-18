@@ -118,7 +118,7 @@ typedef enum : NSUInteger {
 
 /**
  * Set YES if you your view controller does not allow autorotation,
- * but you want to use the devide orientation on capture. Enabled by default.
+ * but you want to use the devide orientation on capture. Disabled by default.
  */
 @property (nonatomic) BOOL useDeviceOrientationOnCapture;
 
@@ -154,6 +154,15 @@ typedef enum : NSUInteger {
  */
 - (void)stop;
 
+
+/**
+ * Capture an image.
+ * @param onCapture a block triggered after the capturing the photo.
+ * @param exactSeenImage If set YES, then the image is cropped to the exact size as the preview. So you get exactly what you see.
+ * @param animationBlock you can create your own animation by playing with preview layer.
+ */
+-(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage animationBlock:(void (^)(AVCaptureVideoPreviewLayer *))animationBlock;
+
 /**
  * Capture an image.
  * @param onCapture a block triggered after the capturing the photo.
@@ -168,14 +177,14 @@ typedef enum : NSUInteger {
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture;
 
 /*
- * Start recording a video. Video is saved to the given url.
+ * Start recording a video with a completion block. Video is saved to the given url.
  */
-- (void)startRecordingWithOutputUrl:(NSURL *)url;
+- (void)startRecordingWithOutputUrl:(NSURL *)url didRecord:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock;
 
 /**
- * Stop recording video with a completion block.
+ * Stop recording video.
  */
-- (void)stopRecording:(void (^)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error))completionBlock;
+- (void)stopRecording;
 
 /**
  * Attaches the LLSimpleCamera to another view controller with a frame. It basically adds the LLSimpleCamera as a
