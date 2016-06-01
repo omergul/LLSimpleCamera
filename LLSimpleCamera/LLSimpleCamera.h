@@ -38,6 +38,8 @@ typedef enum : NSUInteger {
 
 @interface LLSimpleCamera : UIViewController
 
+@property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
+
 /**
  * Triggered on device change.
  */
