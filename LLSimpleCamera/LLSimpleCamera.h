@@ -216,6 +216,13 @@ typedef enum : NSUInteger {
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
 /**
+ *  Function to zoom the camera from code
+ *
+ *  @param factor from 0.0 to 1.0
+ */
+- (void) scaleToFactor:(CGFloat)factor;
+
+/**
  * Checks is the front camera is available.
  */
 + (BOOL)isFrontCameraAvailable;
@@ -224,4 +231,8 @@ typedef enum : NSUInteger {
  * Checks is the rear camera is available.
  */
 + (BOOL)isRearCameraAvailable;
+
+
+
+
 @end
