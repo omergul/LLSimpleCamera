@@ -150,6 +150,18 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
+#pragma mark - Zooming programmatically
+- (void) scaleToFactor:(CGFloat)factor
+{
+	NSError *error = nil;
+	if ([self.videoCaptureDevice lockForConfiguration:&error])
+	{
+		[self.videoCaptureDevice rampToVideoZoomFactor:factor withRate:10];
+		
+		[self.videoCaptureDevice unlockForConfiguration];
+	}
+}
+
 #pragma mark - Camera
 
 - (void)attachToViewController:(UIViewController *)vc withFrame:(CGRect)frame
