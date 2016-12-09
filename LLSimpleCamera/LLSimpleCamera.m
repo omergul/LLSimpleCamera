@@ -749,6 +749,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
+- (void) focusViewWithGesture: (UITapGestureRecognizer *) gesture {
+    CGPoint touchedPoint = [gesture locationInView:self.view];
+    
+    if (CGRectContainsPoint(self.view.frame, touchedPoint)) {
+        [self previewTapped:gesture];
+    }
+}
+
 #pragma mark - UIViewController
 
 - (void)viewWillAppear:(BOOL)animated
