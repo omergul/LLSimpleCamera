@@ -749,12 +749,12 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
-- (void) focusViewOnPoint: (CGPoint) point {
-    if (!self.tapToFocus) {
-        return;
-    }
+- (void) focusViewWithGesture: (UITapGestureRecognizer *) gesture {
+    CGPoint touchedPoint = [gesture locationInView:self.view];
     
-    [self showFocusBox:point];
+    if (CGRectContainsPoint(self.view.frame, touchedPoint)) {
+        [self previewTapped:gesture];
+    }
 }
 
 #pragma mark - UIViewController

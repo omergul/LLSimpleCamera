@@ -218,7 +218,7 @@ typedef enum : NSUInteger {
 /**
  * Call this method in case you need to implement a custom tap to focus gesture
  */
-- (void) focusViewOnPoint: (CGPoint) point;
+- (void) focusViewWithGesture: (UITapGestureRecognizer *) gesture;
 
 /**
  * Checks is the front camera is available.
