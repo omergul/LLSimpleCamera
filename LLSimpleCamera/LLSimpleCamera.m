@@ -749,6 +749,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     }
 }
 
+- (void) focusViewOnPoint: (CGPoint) point {
+    if (!self.tapToFocus) {
+        return;
+    }
+    
+    [self showFocusBox:point];
+}
+
 #pragma mark - UIViewController
 
 - (void)viewWillAppear:(BOOL)animated

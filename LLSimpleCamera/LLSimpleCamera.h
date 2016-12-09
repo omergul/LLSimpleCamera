@@ -216,6 +216,11 @@ typedef enum : NSUInteger {
 - (void)alterFocusBox:(CALayer *)layer animation:(CAAnimation *)animation;
 
 /**
+ * Call this method in case you need to implement a custom tap to focus gesture
+ */
+- (void) focusViewOnPoint: (CGPoint) point;
+
+/**
  * Checks is the front camera is available.
  */
 + (BOOL)isFrontCameraAvailable;
