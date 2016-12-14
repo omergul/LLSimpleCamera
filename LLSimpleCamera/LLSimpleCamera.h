@@ -140,7 +140,7 @@ typedef enum : NSUInteger {
 
 /**
  * Returns an instance of LLSimpleCamera with quality "AVCaptureSessionPresetHigh" and position "CameraPositionBack".
- * @param videEnabled: Set to YES to enable video recording.
+ * @param videoEnabled Set to YES to enable video recording.
  */
 - (instancetype)initWithVideoEnabled:(BOOL)videoEnabled;
 
