@@ -9,6 +9,12 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 
+//! Project version number for LLSimpleCamera.
+FOUNDATION_EXPORT double LLSimpleCameraVersionNumber;
+
+//! Project version string for LLSimpleCamera.
+FOUNDATION_EXPORT const unsigned char LLSimpleCameraVersionString[];
+
 typedef enum : NSUInteger {
     LLCameraPositionRear,
     LLCameraPositionFront
