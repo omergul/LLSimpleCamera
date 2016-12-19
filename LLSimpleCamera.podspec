@@ -17,6 +17,7 @@ hides the nitty gritty details from the developer
   s.platform     = :ios,'7.0'
   s.source       = { :git => "https://github.com/omergul123/LLSimpleCamera.git", :tag => "v5.0.0" }
   s.source_files  = 'LLSimpleCamera/*.{h,m}'
+  s.exclude_files = 'LLSimpleCamera/Version.h'
   s.requires_arc = true
   s.framework = 'AVFoundation'
 end

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03144F251E07950A009D7582 /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 03144F231E079217009D7582 /* Version.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		03C680D91E010CD10052400F /* LLSimpleCamera.h in Headers */ = {isa = PBXBuildFile; fileRef = 03C680D71E010CD10052400F /* LLSimpleCamera.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		03C680E41E010D990052400F /* LLSimpleCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 03C680DF1E010D990052400F /* LLSimpleCamera.m */; };
 		03C680E51E010D990052400F /* LLSimpleCamera+Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 03C680E01E010D990052400F /* LLSimpleCamera+Helper.h */; };
@@ -16,6 +17,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		03144F231E079217009D7582 /* Version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Version.h; sourceTree = "<group>"; };
+		03144F241E07925B009D7582 /* module.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		03C680D41E010CD10052400F /* LLSimpleCamera.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LLSimpleCamera.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		03C680D71E010CD10052400F /* LLSimpleCamera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LLSimpleCamera.h; sourceTree = "<group>"; };
 		03C680D81E010CD10052400F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -58,6 +61,7 @@
 			children = (
 				03C680E21E010D990052400F /* UIImage+FixOrientation.h */,
 				03C680E31E010D990052400F /* UIImage+FixOrientation.m */,
+				03144F231E079217009D7582 /* Version.h */,
 				03C680D71E010CD10052400F /* LLSimpleCamera.h */,
 				03C680DF1E010D990052400F /* LLSimpleCamera.m */,
 				03C680E01E010D990052400F /* LLSimpleCamera+Helper.h */,
@@ -71,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				03C680D81E010CD10052400F /* Info.plist */,
+				03144F241E07925B009D7582 /* module.modulemap */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -82,8 +87,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03C680E71E010D990052400F /* UIImage+FixOrientation.h in Headers */,
 				03C680D91E010CD10052400F /* LLSimpleCamera.h in Headers */,
+				03C680E71E010D990052400F /* UIImage+FixOrientation.h in Headers */,
+				03144F251E07950A009D7582 /* Version.h in Headers */,
 				03C680E51E010D990052400F /* LLSimpleCamera+Helper.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -273,6 +279,7 @@
 				INFOPLIST_FILE = LLSimpleCamera/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MODULEMAP_FILE = "$(SRCROOT)/LLSimpleCamera/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.omerfarukgul.LLSimpleCamera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -291,6 +298,7 @@
 				INFOPLIST_FILE = LLSimpleCamera/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MODULEMAP_FILE = "$(SRCROOT)/LLSimpleCamera/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.omerfarukgul.LLSimpleCamera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
