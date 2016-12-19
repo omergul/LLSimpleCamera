@@ -1,0 +1,4 @@
+framework module LLSimpleCamera {
+    header "LLSimpleCamera.h"
+    header "Version.h"
+}
