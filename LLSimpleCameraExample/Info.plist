@@ -4,6 +4,8 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>LLSimpleCameraExample needs to use the camera.</string>	
+	<key>NSMicrophoneUsageDescription</key>
+        <string>LLSimpleCameraExample needs to use the microphone.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
