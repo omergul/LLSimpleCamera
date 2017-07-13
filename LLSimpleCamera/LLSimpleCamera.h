@@ -111,6 +111,53 @@ typedef enum : NSUInteger {
 @property (nonatomic) BOOL tapToFocus;
 
 /**
+ * If user lock focus by calling lockFocus. Disabled by default. Tap to focus will not work if this is YES.
+ */
+@property (nonatomic, readonly) BOOL isFocusLockedByUser;
+
+/**
+ * Use this method to lock/unlock auto focus. This will set isFocusLockedByUser to YES/NO.
+ */
+- (void)lockFocus:(BOOL)shouldLockFocus;
+
+/**
+ * If user lock exposure by calling lockExposure. Disabled by default.
+ */
+@property (nonatomic, readonly) BOOL isExpouserLockedByUser;
+
+/**
+ * Use this method to lock/unlock exposure. This will set isExpouserLockedByUser to YES/NO.
+ */
+- (void)lockExposure:(BOOL)shouldLockExposure;
+
+/**
+ * Max frame rate for videoSupportedFrameRateRanges
+ */
+@property (nonatomic, readonly) float maxFrameRate;
+
+/**
+* Min frame rate for videoSupportedFrameRateRanges
+*/
+@property (nonatomic, readonly) float minFrameRate;
+
+/**
+ * Use this method to update frame rate within videoSupportedFrameRateRanges
+ */
+- (void)changeFrameRate:(float)frameRate;
+
+/**
+ * Use this method to update sound input level if available from device (6S mic don't have permission, 
+ * using headphone will work though
+ * soundLavel range is 0 to 1. 0 is the minimum, 1 is the maximum
+ */
+- (void)changeInputSoundLavel:(float)soundLavel;
+
+/**
+ * Use this method to get current power level within value 0(min) to 1(max).
+ */
+- (float)getChannelSoundPowerLevel;
+
+/**
  * Set YES if you your view controller does not allow autorotation,
  * however you want to take the device rotation into account no matter what. Disabled by default.
  */

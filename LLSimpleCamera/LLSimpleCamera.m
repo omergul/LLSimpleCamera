@@ -19,6 +19,7 @@
 @property (strong, nonatomic) AVCaptureDevice *audioCaptureDevice;
 @property (strong, nonatomic) AVCaptureDeviceInput *videoDeviceInput;
 @property (strong, nonatomic) AVCaptureDeviceInput *audioDeviceInput;
+@property (strong, nonatomic) AVCaptureAudioDataOutput *captureAudioDataOutput; //For sound input
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
 @property (strong, nonatomic) UITapGestureRecognizer *tapGesture;
 @property (strong, nonatomic) CALayer *focusBoxLayer;
@@ -264,6 +265,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             if([self.session canAddOutput:_movieFileOutput]) {
                 [self.session addOutput:_movieFileOutput];
             }
+            
+            // Add audio data input for getting sound level
+            _captureAudioDataOutput = [AVCaptureAudioDataOutput new];
+            if (_captureAudioDataOutput) {
+                if ([self.session canAddOutput:_captureAudioDataOutput]) {
+                    [self.session addOutput:_captureAudioDataOutput];
+                }
+            }
         }
         
         // continiously adjust white balance
@@ -483,11 +492,17 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     _effectiveScale = 1.0f;
     
+    // Getting max and min frame rate for video input
+    AVFrameRateRange *frameRateRange = [_videoCaptureDevice.activeFormat.videoSupportedFrameRateRanges firstObject];
+    _maxFrameRate = frameRateRange.maxFrameRate;
+    _minFrameRate = frameRateRange.minFrameRate;
+    
     // trigger block
     if(self.onDeviceChange) {
         __weak typeof(self) weakSelf = self;
         self.onDeviceChange(weakSelf, videoCaptureDevice);
     }
+    
 }
 
 - (BOOL)isFlashAvailable
@@ -677,7 +692,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 
 - (void)previewTapped:(UIGestureRecognizer *)gestureRecognizer
 {
-    if(!self.tapToFocus) {
+    if(!self.tapToFocus || _isFocusLockedByUser) {
         return;
     }
     
@@ -748,6 +763,118 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         [self.focusBoxLayer addAnimation:self.focusBoxAnimation forKey:@"animateOpacity"];
     }
 }
+
+- (void)lockFocus:(BOOL)shouldLockFocus {
+    AVCaptureDevice *device = _videoCaptureDevice;
+    if(shouldLockFocus) {
+        if([device isLockingFocusWithCustomLensPositionSupported] && [device isFocusModeSupported:AVCaptureFocusModeLocked]) {
+            NSError*    error = nil;
+            if ([device lockForConfiguration:&error]) {
+                device.focusMode = AVCaptureFocusModeLocked;
+                _isFocusLockedByUser = YES;
+                [device unlockForConfiguration];
+            } else {
+                [self passError:error];
+            }
+        }
+    } else {
+        
+        if([device isLockingFocusWithCustomLensPositionSupported] && [device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+            NSError*    error = nil;
+            if ([device lockForConfiguration:&error]) {
+                _isFocusLockedByUser = NO;
+                device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
+                [device unlockForConfiguration];
+            } else {
+                [self passError:error];
+            }
+        }
+    }
+}
+
+#pragma mark - Exposure
+
+- (void)lockExposure:(BOOL)shouldLockExposure {
+    
+    AVCaptureDevice *device = _videoCaptureDevice;
+    if([device isExposureModeSupported:AVCaptureExposureModeLocked]) {
+        if(shouldLockExposure) {
+            NSError*    error = nil;
+            if ([device lockForConfiguration:&error]) {
+                device.exposureMode = AVCaptureExposureModeLocked;
+                _isExpouserLockedByUser = YES;
+                [device unlockForConfiguration];
+            } else {
+                [self passError:error];
+            }
+        } else {
+            NSError*    error = nil;
+            if ([device lockForConfiguration:&error]) {
+                _isExpouserLockedByUser = NO;
+                device.exposureMode = AVCaptureExposureModeContinuousAutoExposure;
+                [device unlockForConfiguration];
+            } else {
+                [self passError:error];
+            }
+        }
+    }
+}
+
+#pragma mark - Framerate
+
+- (void)changeFrameRate:(float)frameRate {
+    NSError*    error = nil;
+    AVCaptureDevice *device = _videoCaptureDevice;
+    AVFrameRateRange *frameRateRange = [device.activeFormat.videoSupportedFrameRateRanges firstObject];
+    if(frameRate<=frameRateRange.maxFrameRate && frameRate>=frameRateRange.minFrameRate) {
+        if([device lockForConfiguration:&error]) {
+            [device setActiveVideoMinFrameDuration:CMTimeMake(1, frameRate)];
+            [device setActiveVideoMaxFrameDuration:CMTimeMake(1, frameRate)];
+            [device unlockForConfiguration];
+        } else {
+            [self passError:error];
+        }
+    }
+}
+
+#pragma mark - Audio
+
+- (void)changeInputSoundLavel:(float)soundLavel {
+    if([[AVAudioSession sharedInstance] isInputGainSettable] && soundLavel>=0.0 && soundLavel<=1.0) {
+        NSError *error;
+        NSError *sessionError;
+        if(![AVAudioSession sharedInstance].category)
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord error:&sessionError];
+        [[AVAudioSession sharedInstance] setInputGain:soundLavel error:&error];
+        
+        if(error) {
+            [self passError:error];
+        }
+        
+        if(sessionError) {
+            [self passError:sessionError];
+        }
+    }
+}
+
+- (float)getChannelSoundPowerLevel {
+    if(_captureAudioDataOutput) {
+        NSArray *connections = _captureAudioDataOutput.connections;
+        if ([connections count] > 0) {
+            AVCaptureConnection *connection = [connections objectAtIndex:0];
+            NSArray *audioChannels = connection.audioChannels;
+            float soundLevel = 0.0;
+            for (AVCaptureAudioChannel *channel in audioChannels) {
+                float avg = channel.averagePowerLevel;// value Range: 0:max -160:min
+                soundLevel = soundLevel+pow (10, avg / 20);// change to readable value Range: 0:min 1:max
+            }
+            return soundLevel/audioChannels.count;
+        }
+    }
+    
+    return 0.0;
+}
+
 
 #pragma mark - UIViewController
 
