@@ -76,7 +76,7 @@
         
         if(weakSelf.frameRateSlider) {
             weakSelf.frameRateSlider.value = weakSelf.camera.maxFrameRate;
-            weakSelf.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMax:%.2f, Min:%.2f\nValue:%.2f",weakSelf.camera.minFrameRate,weakSelf.camera.maxFrameRate,weakSelf.camera.maxFrameRate];
+            weakSelf.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMin:%.2f, Max:%.2f\nValue:%.2f",weakSelf.camera.minFrameRate,weakSelf.camera.maxFrameRate,weakSelf.camera.maxFrameRate];
         }
         
         [weakSelf updateLockFocusButtonTitle];
@@ -200,7 +200,7 @@
         self.frameRateSlider.continuous = NO;
         self.frameRateSlider.value = self.camera.maxFrameRate;
         
-        self.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMax:%.2f, Min:%.2f\nValue:%.2f",self.camera.minFrameRate,self.camera.maxFrameRate,self.camera.maxFrameRate];
+        self.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMin:%.2f, Max:%.2f\nValue:%.2f",self.camera.minFrameRate,self.camera.maxFrameRate,self.camera.maxFrameRate];
         
         [self.view addSubview:self.frameRateSlider];
     });
@@ -237,7 +237,7 @@
 - (void)frameRateSliderValueChanged:(id)sender {
     UISlider *slider = (UISlider*)sender;
     [self.camera changeFrameRate:slider.value];
-    self.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMax:%.2f, Min:%.2f\nValue:%.2f",self.camera.minFrameRate,self.camera.maxFrameRate,slider.value];
+    self.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMin:%.2f, Max:%.2f\nValue:%.2f",self.camera.minFrameRate,self.camera.maxFrameRate,slider.value];
 }
 
 - (IBAction)lockFocusButtonPressed:(id)sender {
