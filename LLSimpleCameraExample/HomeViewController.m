@@ -18,6 +18,14 @@
 @property (strong, nonatomic) UIButton *switchButton;
 @property (strong, nonatomic) UIButton *flashButton;
 @property (strong, nonatomic) UISegmentedControl *segmentedControl;
+
+@property (strong, nonatomic) UIButton *lockFocusButton;
+@property (strong, nonatomic) UIButton *lockExposureButton;
+@property (strong, nonatomic) UISlider *frameRateSlider;
+@property (strong, nonatomic) UILabel *frameRateLabel;
+@property (strong, nonatomic) UIProgressView *soundLevelProgress;
+@property (strong, nonatomic) UILabel *soundLevelProgressLabel;
+
 @end
 
 @implementation HomeViewController
@@ -25,7 +33,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
+    
     self.view.backgroundColor = [UIColor blackColor];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
@@ -65,6 +73,15 @@
         else {
             weakSelf.flashButton.hidden = YES;
         }
+        
+        if(weakSelf.frameRateSlider) {
+            weakSelf.frameRateSlider.value = weakSelf.camera.maxFrameRate;
+            weakSelf.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMax:%.2f, Min:%.2f\nValue:%.2f",weakSelf.camera.minFrameRate,weakSelf.camera.maxFrameRate,weakSelf.camera.maxFrameRate];
+        }
+        
+        [weakSelf updateLockFocusButtonTitle];
+        [weakSelf updateLockExposureButtonTitle];
+        
     }];
     
     [self.camera setOnError:^(LLSimpleCamera *camera, NSError *error) {
@@ -93,7 +110,7 @@
             }
         }
     }];
-
+    
     // ----- camera buttons -------- //
     
     // snap button to capture image
@@ -135,6 +152,124 @@
     self.segmentedControl.tintColor = [UIColor whiteColor];
     [self.segmentedControl addTarget:self action:@selector(segmentedControlValueChanged:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:self.segmentedControl];
+    
+    // Button for focus lock
+    self.lockFocusButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.lockFocusButton.frame = CGRectMake(10.0, 10.0, 100.0, 50.0);
+    self.lockFocusButton.backgroundColor = [UIColor clearColor];
+    self.lockFocusButton.layer.borderWidth = 1.0;
+    self.lockFocusButton.layer.borderColor = [[UIColor whiteColor] CGColor];
+    [self.lockFocusButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    self.lockFocusButton.titleLabel.font = [UIFont systemFontOfSize:12.0];
+    [self.lockFocusButton addTarget:self action:@selector(lockFocusButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    [self updateLockFocusButtonTitle];
+    [self.view addSubview:self.lockFocusButton];
+    
+    // Button for exposure lock
+    self.lockExposureButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.lockExposureButton.frame = CGRectMake(10.0, 70.0, 120.0, 50.0);
+    self.lockExposureButton.backgroundColor = [UIColor clearColor];
+    self.lockExposureButton.layer.borderWidth = 1.0;
+    self.lockExposureButton.layer.borderColor = [[UIColor whiteColor] CGColor];
+    [self.lockExposureButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    self.lockExposureButton.titleLabel.font = [UIFont systemFontOfSize:12.0];
+    [self.lockExposureButton addTarget:self action:@selector(lockExposureButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    [self updateLockExposureButtonTitle];
+    [self.view addSubview:self.lockExposureButton];
+    
+    self.frameRateLabel = [[UILabel alloc] initWithFrame:CGRectMake(5.0, 160.0, 130.0, 80.0)];
+    self.frameRateLabel.text = @"";
+    self.frameRateLabel.font = [UIFont systemFontOfSize:12.0];
+    self.frameRateLabel.numberOfLines = 0;
+    self.frameRateLabel.adjustsFontSizeToFitWidth = YES;
+    self.frameRateLabel.minimumScaleFactor = 10.0f/12.0f;
+    self.frameRateLabel.backgroundColor = [UIColor clearColor];
+    self.frameRateLabel.textColor = [UIColor whiteColor];
+    self.frameRateLabel.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:self.frameRateLabel];
+    
+    self.frameRateSlider = [[UISlider alloc] initWithFrame:CGRectMake(10.0, 130.0, 120.0, 50.0)];
+    [self.frameRateSlider addTarget:self action:@selector(frameRateSliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.frameRateSlider setBackgroundColor:[UIColor clearColor]];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        // Warning: Delaying 2 sec for camera to fully initialize,
+        // after start function is called from viewWillAppear
+        // You can call it from there after the camera initialization
+        self.frameRateSlider.minimumValue = self.camera.minFrameRate;
+        self.frameRateSlider.maximumValue = self.camera.maxFrameRate;
+        self.frameRateSlider.continuous = NO;
+        self.frameRateSlider.value = self.camera.maxFrameRate;
+        
+        self.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMax:%.2f, Min:%.2f\nValue:%.2f",self.camera.minFrameRate,self.camera.maxFrameRate,self.camera.maxFrameRate];
+        
+        [self.view addSubview:self.frameRateSlider];
+    });
+    
+    self.soundLevelProgress = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
+    self.soundLevelProgress.progressTintColor = [UIColor colorWithRed:187.0/255 green:160.0/255 blue:209.0/255 alpha:1.0];
+    [[self.soundLevelProgress layer]setFrame:CGRectMake(10.0, 250.0, 120, 20)];
+    [[self.soundLevelProgress layer]setBorderColor:[UIColor whiteColor].CGColor];
+    self.soundLevelProgress.trackTintColor = [UIColor clearColor];
+    [self.soundLevelProgress setProgress:0.0 animated:YES];
+    self.soundLevelProgress.progress=0.0;
+    [[self.soundLevelProgress layer]setCornerRadius:4.0];
+    [[self.soundLevelProgress layer]setBorderWidth:1];
+    [[self.soundLevelProgress layer]setMasksToBounds:TRUE];
+    self.soundLevelProgress.clipsToBounds = YES;
+    
+    [self.view addSubview:self.soundLevelProgress];
+    
+    [NSTimer scheduledTimerWithTimeInterval:1/30 repeats:YES block:^(NSTimer * _Nonnull timer) {
+        self.soundLevelProgress.progress = [self.camera getChannelSoundPowerLevel];
+    }];
+    self.soundLevelProgressLabel = [[UILabel alloc] initWithFrame:CGRectMake(5.0, 280.0, 130.0, 30.0)];
+    self.soundLevelProgressLabel.text = @"Sound Power Level";
+    self.soundLevelProgressLabel.font = [UIFont systemFontOfSize:12.0];
+    self.soundLevelProgressLabel.numberOfLines = 0;
+    self.soundLevelProgressLabel.adjustsFontSizeToFitWidth = YES;
+    self.soundLevelProgressLabel.minimumScaleFactor = 10.0f/12.0f;
+    self.soundLevelProgressLabel.backgroundColor = [UIColor clearColor];
+    self.soundLevelProgressLabel.textColor = [UIColor whiteColor];
+    self.soundLevelProgressLabel.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:self.soundLevelProgressLabel];
+}
+
+- (void)frameRateSliderValueChanged:(id)sender {
+    UISlider *slider = (UISlider*)sender;
+    [self.camera changeFrameRate:slider.value];
+    self.frameRateLabel.text = [NSString stringWithFormat:@"Frame Rate \nMax:%.2f, Min:%.2f\nValue:%.2f",self.camera.minFrameRate,self.camera.maxFrameRate,slider.value];
+}
+
+- (IBAction)lockFocusButtonPressed:(id)sender {
+    if(!self.camera.isFocusLockedByUser)
+        [self.camera lockFocus:YES];
+    else
+        [self.camera lockFocus:NO];
+    [self updateLockFocusButtonTitle];
+}
+
+- (void)updateLockFocusButtonTitle {
+    if(self.camera.isFocusLockedByUser)
+        [self.lockFocusButton setTitle:@"Focus Lock: On" forState:UIControlStateNormal];
+    else
+        [self.lockFocusButton setTitle:@"Focus Lock: Off" forState:UIControlStateNormal];
+    
+}
+
+- (IBAction)lockExposureButtonPressed:(id)sender {
+    if(!self.camera.isExpouserLockedByUser)
+        [self.camera lockExposure:YES];
+    else
+        [self.camera lockExposure:NO];
+    [self updateLockExposureButtonTitle];
+}
+
+- (void)updateLockExposureButtonTitle {
+    if(self.camera.isExpouserLockedByUser)
+        [self.lockExposureButton setTitle:@"Exposure Lock: On" forState:UIControlStateNormal];
+    else
+        [self.lockExposureButton setTitle:@"Exposure Lock: Off" forState:UIControlStateNormal];
+    
 }
 
 - (void)segmentedControlValueChanged:(UISegmentedControl *)control
@@ -155,6 +290,10 @@
 - (void)switchButtonPressed:(UIButton *)button
 {
     [self.camera togglePosition];
+}
+
+- (void)callSOundLevel {
+    NSLog(@"%f",[self.camera getChannelSoundPowerLevel]);
 }
 
 - (NSURL *)applicationDocumentsDirectory
