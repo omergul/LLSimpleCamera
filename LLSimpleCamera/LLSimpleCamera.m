@@ -244,7 +244,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
         
         if([self.session canAddInput:_videoDeviceInput]) {
             [self.session  addInput:_videoDeviceInput];
-            self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+            [self orientConnection:self.captureVideoPreviewLayer.connection];
         }
         
         // add audio if video is enabled
@@ -254,11 +254,11 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             if (!_audioDeviceInput) {
                 [self passError:error];
             }
-        
+            
             if([self.session canAddInput:_audioDeviceInput]) {
                 [self.session addInput:_audioDeviceInput];
             }
-        
+            
             _movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
             [_movieFileOutput setMovieFragmentInterval:kCMTimeInvalid];
             if([self.session canAddOutput:_movieFileOutput]) {
@@ -297,15 +297,15 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 {
     if(!self.session) {
         NSError *error = [NSError errorWithDomain:LLSimpleCameraErrorDomain
-                                    code:LLSimpleCameraErrorCodeSession
-                                userInfo:nil];
+                                             code:LLSimpleCameraErrorCodeSession
+                                         userInfo:nil];
         onCapture(self, nil, nil, error);
         return;
     }
     
     // get connection and set orientation
     AVCaptureConnection *videoConnection = [self captureConnection];
-    videoConnection.videoOrientation = [self orientationForConnection];
+    [self orientConnection:videoConnection];
     
     BOOL flashActive = self.videoCaptureDevice.flashActive;
     if (!flashActive && animationBlock) {
@@ -314,35 +314,35 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
         
-         UIImage *image = nil;
-         NSDictionary *metadata = nil;
-         
-         // check if we got the image buffer
-         if (imageSampleBuffer != NULL) {
-             CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
-             if(exifAttachments) {
-                 metadata = (__bridge NSDictionary*)exifAttachments;
-             }
-             
-             NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
-             image = [[UIImage alloc] initWithData:imageData];
-             
-             if(exactSeenImage) {
-                 image = [self cropImage:image usingPreviewLayer:self.captureVideoPreviewLayer];
-             }
-             
-             if(self.fixOrientationAfterCapture) {
-                 image = [image fixOrientation];
-             }
-         }
-         
-         // trigger the block
-         if(onCapture) {
-             dispatch_async(dispatch_get_main_queue(), ^{
+        UIImage *image = nil;
+        NSDictionary *metadata = nil;
+        
+        // check if we got the image buffer
+        if (imageSampleBuffer != NULL) {
+            CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
+            if(exifAttachments) {
+                metadata = (__bridge NSDictionary*)exifAttachments;
+            }
+            
+            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
+            image = [[UIImage alloc] initWithData:imageData];
+            
+            if(exactSeenImage) {
+                image = [self cropImage:image usingPreviewLayer:self.captureVideoPreviewLayer];
+            }
+            
+            if(self.fixOrientationAfterCapture) {
+                image = [image fixOrientation];
+            }
+        }
+        
+        // trigger the block
+        if(onCapture) {
+            dispatch_async(dispatch_get_main_queue(), ^{
                 onCapture(self, image, metadata, error);
-             });
-         }
-     }];
+            });
+        }
+    }];
 }
 
 -(void)capture:(void (^)(LLSimpleCamera *camera, UIImage *image, NSDictionary *metadata, NSError *error))onCapture exactSeenImage:(BOOL)exactSeenImage {
@@ -388,7 +388,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             // get only the video media types
             if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
                 if ([connection isVideoOrientationSupported]) {
-                    [connection setVideoOrientation:[self orientationForConnection]];
+                    [self orientConnection:connection];
                 }
             }
         }
@@ -549,14 +549,14 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 - (void)setMirror:(LLCameraMirror)mirror
 {
     _mirror = mirror;
-
+    
     if(!self.session) {
         return;
     }
-
+    
     AVCaptureConnection *videoConnection = [_movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
     AVCaptureConnection *pictureConnection = [_stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-
+    
     switch (mirror) {
         case LLCameraMirrorOff: {
             if ([videoConnection isVideoMirroringSupported]) {
@@ -568,7 +568,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             }
             break;
         }
-
+            
         case LLCameraMirrorOn: {
             if ([videoConnection isVideoMirroringSupported]) {
                 [videoConnection setVideoMirrored:YES];
@@ -579,7 +579,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             }
             break;
         }
-
+            
         case LLCameraMirrorAuto: {
             BOOL shouldMirror = (_position == LLCameraPositionFront);
             if ([videoConnection isVideoMirroringSupported]) {
@@ -592,7 +592,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
             break;
         }
     }
-
+    
     return;
 }
 
@@ -658,7 +658,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     self.videoCaptureDevice = device;
     self.videoDeviceInput = videoInput;
-
+    
     [self setMirror:_mirror];
 }
 
@@ -771,14 +771,30 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     self.captureVideoPreviewLayer.bounds = bounds;
     self.captureVideoPreviewLayer.position = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
     
-    self.captureVideoPreviewLayer.connection.videoOrientation = [self orientationForConnection];
+    [self orientConnection:self.captureVideoPreviewLayer.connection];
 }
 
-- (AVCaptureVideoOrientation)orientationForConnection
-{
+- (void)orientConnection:(AVCaptureConnection *)connection {
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
     
-    if(self.useDeviceOrientation) {
+    if (!self.useDeviceOrientation || connection == self.captureVideoPreviewLayer.connection) {
+        // Use UI orientation for the preview layer
+        switch ([[UIApplication sharedApplication] statusBarOrientation]) {
+            case UIInterfaceOrientationLandscapeLeft:
+                videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+                break;
+            case UIInterfaceOrientationPortraitUpsideDown:
+                videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
+                break;
+            default:
+                videoOrientation = AVCaptureVideoOrientationPortrait;
+                break;
+        }
+    } else {
+        // Use device orientation to set video output orientatation
         switch ([UIDevice currentDevice].orientation) {
             case UIDeviceOrientationLandscapeLeft:
                 // yes to the right, this is not bug!
@@ -795,24 +811,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
                 break;
         }
     }
-    else {
-        switch ([[UIApplication sharedApplication] statusBarOrientation]) {
-            case UIInterfaceOrientationLandscapeLeft:
-                videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-                break;
-            case UIInterfaceOrientationLandscapeRight:
-                videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-                break;
-            case UIInterfaceOrientationPortraitUpsideDown:
-                videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-                break;
-            default:
-                videoOrientation = AVCaptureVideoOrientationPortrait;
-                break;
-        }
-    }
     
-    return videoOrientation;
+    connection.videoOrientation = videoOrientation;
 }
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
@@ -877,3 +877,4 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
 }
 
 @end
+
