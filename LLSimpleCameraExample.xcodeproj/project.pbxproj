@@ -28,6 +28,7 @@
 		17E4C4B51A0123C100E61ACD /* UIImage+Resize.m in Sources */ = {isa = PBXBuildFile; fileRef = 17E4C4B21A0123C100E61ACD /* UIImage+Resize.m */; };
 		17E4C4B91A01285800E61ACD /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 17E4C4B81A01285800E61ACD /* HomeViewController.m */; };
 		17E4C4BC1A0128EC00E61ACD /* ViewUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 17E4C4BB1A0128EC00E61ACD /* ViewUtils.m */; };
+		56F0FDCA1FE3DB4B00D25A24 /* DBMotionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 56F0FDC91FE3DB4B00D25A24 /* DBMotionManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -76,6 +77,8 @@
 		17E4C4B81A01285800E61ACD /* HomeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HomeViewController.m; sourceTree = "<group>"; };
 		17E4C4BA1A0128EC00E61ACD /* ViewUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewUtils.h; sourceTree = "<group>"; };
 		17E4C4BB1A0128EC00E61ACD /* ViewUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewUtils.m; sourceTree = "<group>"; };
+		56F0FDC81FE3DB4B00D25A24 /* DBMotionManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBMotionManager.h; sourceTree = "<group>"; };
+		56F0FDC91FE3DB4B00D25A24 /* DBMotionManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DBMotionManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +176,8 @@
 		17E4C4A81A01235200E61ACD /* LLSimpleCamera */ = {
 			isa = PBXGroup;
 			children = (
+				56F0FDC81FE3DB4B00D25A24 /* DBMotionManager.h */,
+				56F0FDC91FE3DB4B00D25A24 /* DBMotionManager.m */,
 				171362191A0144100034A6FE /* UIImage+FixOrientation.h */,
 				1713621A1A0144100034A6FE /* UIImage+FixOrientation.m */,
 				17E4C4A91A01235200E61ACD /* LLSimpleCamera.h */,
@@ -258,7 +263,7 @@
 				TargetAttributes = {
 					17E4C47E1A0122A700E61ACD = {
 						CreatedOnToolsVersion = 6.0.1;
-						DevelopmentTeam = NZPAC7Q696;
+						DevelopmentTeam = 9HZCPHT288;
 					};
 					17E4C4971A0122A700E61ACD = {
 						CreatedOnToolsVersion = 6.0.1;
@@ -323,6 +328,7 @@
 				1713621B1A0144100034A6FE /* UIImage+FixOrientation.m in Sources */,
 				17E4C4BC1A0128EC00E61ACD /* ViewUtils.m in Sources */,
 				17E4C4881A0122A700E61ACD /* AppDelegate.m in Sources */,
+				56F0FDCA1FE3DB4B00D25A24 /* DBMotionManager.m in Sources */,
 				17E4C4851A0122A700E61ACD /* main.m in Sources */,
 				17E4C4B91A01285800E61ACD /* HomeViewController.m in Sources */,
 				1733A8EE1C791BA5000B3648 /* LLSimpleCamera+Helper.m in Sources */,
@@ -442,9 +448,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = 9HZCPHT288;
 				INFOPLIST_FILE = LLSimpleCameraExample/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.szy.seebaby.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 			};
@@ -456,9 +464,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEVELOPMENT_TEAM = 9HZCPHT288;
 				INFOPLIST_FILE = LLSimpleCameraExample/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.szy.seebaby.test;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 			};

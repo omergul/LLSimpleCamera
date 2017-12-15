@@ -10,6 +10,7 @@
 #import <ImageIO/CGImageProperties.h>
 #import "UIImage+FixOrientation.h"
 #import "LLSimpleCamera+Helper.h"
+#import "DBMotionManager.h"
 
 @interface LLSimpleCamera () <AVCaptureFileOutputRecordingDelegate, UIGestureRecognizerDelegate>
 @property (strong, nonatomic) UIView *preview;
@@ -28,6 +29,8 @@
 @property (nonatomic, assign) CGFloat beginGestureScale;
 @property (nonatomic, assign) CGFloat effectiveScale;
 @property (nonatomic, copy) void (^didRecordCompletionBlock)(LLSimpleCamera *camera, NSURL *outputFileUrl, NSError *error);
+@property (assign, nonatomic) UIDeviceOrientation lastDeviceOrientation;
+
 @end
 
 NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
@@ -81,6 +84,8 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     _recording = NO;
     _zoomingEnabled = YES;
     _effectiveScale = 1.0f;
+    _lastDeviceOrientation = UIDeviceOrientationPortrait;
+
 }
 
 - (void)viewDidLoad
@@ -109,6 +114,24 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     
     // add focus box to view
     [self addDefaultFocusBox];
+}
+
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    __weak typeof(self) weakSelf = self;
+    [[DBMotionManager sharedManager] setMotionRotationHandler:^(UIDeviceOrientation orientation){
+        [weakSelf rotationChanged:orientation];
+    }];
+    [[DBMotionManager sharedManager] startMotionHandler];
+}
+
+- (void) rotationChanged:(UIDeviceOrientation) orientation
+{
+    if ( orientation != UIDeviceOrientationUnknown ||
+        orientation != UIDeviceOrientationFaceUp ||
+        orientation != UIDeviceOrientationFaceDown ) {
+        _lastDeviceOrientation = orientation;
+    }
 }
 
 #pragma mark Pinch Delegate
@@ -779,7 +802,7 @@ NSString *const LLSimpleCameraErrorDomain = @"LLSimpleCameraErrorDomain";
     AVCaptureVideoOrientation videoOrientation = AVCaptureVideoOrientationPortrait;
     
     if(self.useDeviceOrientation) {
-        switch ([UIDevice currentDevice].orientation) {
+        switch (self.lastDeviceOrientation) {
             case UIDeviceOrientationLandscapeLeft:
                 // yes to the right, this is not bug!
                 videoOrientation = AVCaptureVideoOrientationLandscapeRight;
