@@ -43,7 +43,8 @@
     
     // read: http://stackoverflow.com/questions/5427656/ios-uiimagepickercontroller-result-image-orientation-after-upload
     // you probably will want to set this to YES, if you are going view the image outside iOS.
-    self.camera.fixOrientationAfterCapture = NO;
+    self.camera.fixOrientationAfterCapture = YES;
+    self.camera.useDeviceOrientation = YES;
     
     // take the required actions on a device change
     __weak typeof(self) weakSelf = self;
